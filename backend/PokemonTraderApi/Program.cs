@@ -1,3 +1,4 @@
+using Microsoft.AspNetCore.Authentication.Cookies;
 using Microsoft.AspNetCore.Authentication;
 using Microsoft.AspNetCore.Identity;
 using Microsoft.Data.Sqlite;
@@ -24,7 +25,23 @@ public class Program
     builder.Services.AddTransient<IUserStore<IdentityUser>, Data.UserStore>();
     /*builder.Services.AddTransient<DapperUsersTable>();*/
 
-    builder.Services.AddAuthentication().AddBearerToken();
+    builder.Services.AddAuthentication(options =>
+    {
+      options.DefaultAuthenticateScheme = IdentityConstants.ApplicationScheme;
+      options.DefaultChallengeScheme = IdentityConstants.ApplicationScheme;
+      options.DefaultSignInScheme = IdentityConstants.ExternalScheme;
+    }).AddIdentityCookies();
+    /*builder.Services.AddTransient(typeof(UserManager<IdentityUser>));*/
+    /*builder.Services.AddTransient(typeof(SignInManager<IdentityUser>));*/
+
+    builder.Services.ConfigureApplicationCookie(options =>
+{
+  options.Events.OnRedirectToLogin = context =>
+  {
+    context.Response.StatusCode = 401;
+    return Task.CompletedTask;
+  };
+});
 
     builder.Services.AddControllers();
     // Learn more about configuring Swagger/OpenAPI at https://aka.ms/aspnetcore/swashbuckle

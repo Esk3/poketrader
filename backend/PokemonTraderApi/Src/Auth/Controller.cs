@@ -5,7 +5,6 @@ using Microsoft.AspNetCore.Identity;
 
 namespace PokemonTraderApi.Auth.Controller;
 
-
 [Route("[controller]")]
 public class AuthController : MyControllerBase
 {
@@ -17,31 +16,35 @@ public class AuthController : MyControllerBase
     _signinManager = signInManager;
   }
 
-  [HttpGet]
-  [AllowAnonymous]
-  public ActionResult<string> Index()
-  {
-    return "hello index";
-  }
-
   [HttpGet("user")]
   [AllowAnonymous]
   public async Task<ActionResult<string>> GetUser()
   {
     var user = User;
-    Console.WriteLine(user);
     var TheUser = await _userManager.GetUserAsync(user);
-    Console.WriteLine(TheUser);
-    return null;
+    if (TheUser is null) return NotFound("user not found");
+    return TheUser.UserName;
+  }
+
+  [HttpPost("register")]
+  [AllowAnonymous]
+  public async void Register(Form.Register data)
+  {
+    var user = new IdentityUser { UserName = data.UserName };
+    await _userManager.CreateAsync(user);
   }
 
   [HttpPost("signin")]
   [AllowAnonymous]
-  public async Task<ActionResult<string>> SignIn()
+  public async void SignIn(Form.SignIn data)
   {
-    var usre = new IdentityUser { UserName = "abc" };
-    await _userManager.CreateAsync(usre);
-    await _signinManager.SignInAsync(usre, true);
-    return null;
+    var user = new IdentityUser { UserName = data.UserName };
+    await _signinManager.SignInAsync(user, true);
+  }
+
+  [HttpPost("signout")]
+  public async void SignOut()
+  {
+    await _signinManager.SignOutAsync();
   }
 }
