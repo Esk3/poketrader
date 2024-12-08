@@ -2,7 +2,13 @@ using PokemonTraderApi.Data;
 
 namespace PokemonTraderApi.Shop;
 
-public interface IRepository { }
+public interface IRepository
+{
+  public List<ShopItem> GetItems();
+  public ShopItem? GetItem(long itemId);
+  public ShopItem? BuyItem(long itemId, User.PokemonUser user);
+  public ShopItem? SellItem(long inventoryItemId, User.PokemonUser user);
+}
 
 public class Repository : IRepository
 {
@@ -10,5 +16,25 @@ public class Repository : IRepository
   public Repository(AppDbContext context)
   {
     _context = context;
+  }
+
+  public ShopItem? BuyItem(long itemId, User.PokemonUser user)
+  {
+    throw new NotImplementedException();
+  }
+
+  public ShopItem? GetItem(long itemId)
+  {
+    throw new NotImplementedException();
+  }
+
+  public List<ShopItem> GetItems()
+  {
+    throw new NotImplementedException();
+  }
+
+  public ShopItem? SellItem(long inventoryItemId, User.PokemonUser user)
+  {
+    throw new NotImplementedException();
   }
 }

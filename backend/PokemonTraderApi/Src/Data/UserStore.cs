@@ -25,7 +25,7 @@ public class UserStore : IUserStore<IdentityUser>,
   {
     _conn().Execute(@"
         create table if not exists auth_users (
-          user_id integer primary key autoincrement,
+          auth_user_id integer primary key autoincrement,
           username text not null
           )
         ");
@@ -50,7 +50,7 @@ public class UserStore : IUserStore<IdentityUser>,
   public async Task<IdentityUser?> FindByIdAsync(string userId, CancellationToken cancellationToken)
   {
     var user = await _conn().QuerySingleOrDefaultAsync<IdentityUser>(@"
-        select user_id as id, username from auth_users where user_id = @Id
+        select auth_user_id as id, username from auth_users where user_id = @Id
         ", new { Id = userId });
     return user;
     throw new NotImplementedException();
@@ -59,7 +59,7 @@ public class UserStore : IUserStore<IdentityUser>,
   public async Task<IdentityUser?> FindByNameAsync(string normalizedUserName, CancellationToken cancellationToken)
   {
     var user = await _conn().QuerySingleOrDefaultAsync<IdentityUser>(@"
-        select user_id as id, username from auth_users where username like @UserName
+        select auth_user_id as id, username from auth_users where username like @UserName
         ", new { UserName = normalizedUserName });
     return user;
     throw new NotImplementedException();
@@ -86,7 +86,7 @@ public class UserStore : IUserStore<IdentityUser>,
   public async Task SetNormalizedUserNameAsync(IdentityUser user, string? normalizedName, CancellationToken cancellationToken)
   {
     /*var res = await _conn().ExecuteAsync(@"*/
-    /*    update auth_users set username = @UserName where user_id = @Id*/
+    /*    update auth_users set username = @UserName where auth_user_id = @Id*/
     /*    ", new { Id = user.Id, UserName = user.UserName });*/
     return;
     throw new NotImplementedException();
