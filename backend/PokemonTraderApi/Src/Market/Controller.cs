@@ -6,6 +6,13 @@ namespace PokemonTraderApi.Market.Controller;
 [Route("[controller]")]
 public class MarketController : Util.MyControllerBase
 {
+  private readonly IRepository _repo;
+
+  public MarketController(IRepository repository)
+  {
+    _repo = repository;
+  }
+
   [HttpGet]
   public void GetAllOpenTrades() { }
 

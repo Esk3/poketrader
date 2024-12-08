@@ -47,6 +47,8 @@ public class Program
         });
 
     builder.Services.AddTransient<Inventory.IRepository, Inventory.Repository>();
+    builder.Services.AddTransient<Pokemon.IRepository, Pokemon.Repository>();
+    builder.Services.AddTransient<User.IRepository, User.Repository>();
     builder.Services.AddControllers();
     // Learn more about configuring Swagger/OpenAPI at https://aka.ms/aspnetcore/swashbuckle
     builder.Services.AddEndpointsApiExplorer();

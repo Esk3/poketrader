@@ -2,7 +2,10 @@ using PokemonTraderApi.Data;
 
 namespace PokemonTraderApi.Pokemon;
 
-public interface IRepository { }
+public interface IRepository
+{
+  public List<PokemonName> GetNames();
+}
 
 public class Repository : IRepository
 {
@@ -10,5 +13,10 @@ public class Repository : IRepository
   public Repository(AppDbContext context)
   {
     _context = context;
+  }
+
+  public List<PokemonName> GetNames()
+  {
+    return new List<PokemonName> { new PokemonName { name = "hello" }, new PokemonName { name = "world" } };
   }
 }

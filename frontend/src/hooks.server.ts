@@ -1,15 +1,16 @@
+import { ApiUrl } from '$lib';
 import type { HandleFetch } from '@sveltejs/kit';
 
-export const handleFetch: HandleFetch = async ({ request, fetch }) => {
-  if (request.url.startsWith('https://api.yourapp.com/')) {
-    // clone the original request, but change the URL
-    request = new Request(
-      request.url.replace('https://api.yourapp.com/', 'http://localhost:9999/'),
-      request
-    );
-  }
-  console.log("cookies")
+export const handleFetch: HandleFetch = async ({ event, request, fetch }) => {
+  const url = new URL(request.url);
 
-  return fetch(request);
+  if (url.pathname.startsWith("/API")) {
+    url.pathname = url.pathname.replace("/API", "");
+    url.host = ApiUrl.host;
+    request = new Request(url, request);
+    request.headers.set("cookie", event.request.headers.get("cookie"));
+  }
+
+  return await fetch(request);
 };
 

@@ -5,12 +5,28 @@ namespace PokemonTraderApi.Pokemon.Controller;
 [Route("[controller]")]
 public class PokemonController : Util.MyControllerBase
 {
+  private readonly IRepository _repo;
+
+  public PokemonController(IRepository repository)
+  {
+    _repo = repository;
+  }
+
   [HttpGet]
-  public void GetAll() { }
+  public ActionResult<List<PokemonName>> GetAll()
+  {
+    return _repo.GetNames();
+  }
 
   [HttpGet("{pokemonId}")]
-  public void GetById(long pokemonId) { }
+  public ActionResult<PokemonName> GetById(long pokemonId)
+  {
+    return null;
+  }
 
   [HttpGet("{name}")]
-  public void GetByName(string name) { }
+  public ActionResult<PokemonName> GetByName(string name)
+  {
+    return null;
+  }
 }

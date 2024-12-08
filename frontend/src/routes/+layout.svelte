@@ -1,19 +1,42 @@
 <script lang="ts">
-const {children, data} = $props();
+const { children, data }: any = $props();
+const coins = $state(234);
+console.log(data.user);
 </script>
 
 <header>
 <nav>
 <ul>
 {#each data.pages as page}
-<li>
-<a href="{page.href}">{page.name}</a>
-</li>
+  <li>
+    <a href="{page.href}">{page.name}</a>
+  </li>
+{/each}
+<li class="split"></li>
+<li>Coins: {coins}</li>
+{#if !data.user}
+<li><a href="/register">Register</a></li>
+<li><a href="/login">Login</a></li>
+{:else}
+<li>Logged in as: {data.user.username}</li>
+<li><a href="/logout">Logout</a></li>
+{/if}
 </ul>
 </nav>
-{/each}
 
 </header>
 <main>
 {@render children()}
 </main>
+
+<style>
+ul {
+display: flex;
+padding: 0;
+list-style: none;
+gap: 1em;
+}
+li.split {
+margin-left: auto;
+}
+</style>
