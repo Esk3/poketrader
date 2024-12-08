@@ -20,5 +20,6 @@ public class AppDbContext
 
   void Setup()
   {
+    Dapper.DefaultTypeMap.MatchNamesWithUnderscores = true;
   }
 }
