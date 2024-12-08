@@ -16,16 +16,6 @@ public class AuthController : MyControllerBase
     _signinManager = signInManager;
   }
 
-  [HttpGet("user")]
-  [AllowAnonymous]
-  public async Task<ActionResult<string>> GetUser()
-  {
-    var user = User;
-    var TheUser = await _userManager.GetUserAsync(user);
-    if (TheUser is null) return NotFound("user not found");
-    return TheUser.UserName;
-  }
-
   [HttpPost("register")]
   [AllowAnonymous]
   public async void Register(Form.Register data)
@@ -36,10 +26,15 @@ public class AuthController : MyControllerBase
 
   [HttpPost("signin")]
   [AllowAnonymous]
-  public async void SignIn(Form.SignIn data)
+  public async Task<ActionResult<string>> SignIn(Form.SignIn data)
   {
-    var user = new IdentityUser { UserName = data.UserName };
+    /*var res = await _signinManager.PasswordSignInAsync(user, "abc", true, false);*/
+    // TODO: ignores any password. logs in by username only
+    var user = await _userManager.FindByNameAsync(data.UserName);
+    if (user is null) return BadRequest("invalid login");
+
     await _signinManager.SignInAsync(user, true);
+    return "Ok";
   }
 
   [HttpPost("signout")]
