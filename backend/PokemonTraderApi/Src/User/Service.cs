@@ -16,6 +16,7 @@ public interface IRepository
   public long GetCoins(long userId);
   public long SetCoins(int amount, long userId);
   public long UpdateCoins(int change, long userId);
+  public long TryUpdateCoins(int change, long userId);
 }
 
 public class Repository : IRepository
@@ -59,6 +60,15 @@ public class Repository : IRepository
       Debug.Assert(GetCoins(000) == -1);
       UpdateCoins(20, 000);
       SetCoins(10, 000);
+
+      Debug.Assert(TryUpdateCoins(-200, id) == -1);
+      Debug.Assert(GetCoins(id) == 30);
+
+      Debug.Assert(TryUpdateCoins(-10, id) == 20);
+      Debug.Assert(GetCoins(id) == 20);
+
+      Debug.Assert(TryUpdateCoins(20, id) == 40);
+      Debug.Assert(GetCoins(id) == 40);
 
       transaction.Rollback();
     }
@@ -116,5 +126,17 @@ public class Repository : IRepository
         );
     if (result is null) return -1;
     return result.coins;
+  }
+
+  public long TryUpdateCoins(int change, long userId)
+  {
+    var rowsChanged = _context.GetConnection().Execute(
+        "update pokemon_users set coins = coins + @Value where coins + @Value >= 0 and pokemon_user_id = @UserId",
+        new { Value = change, UserId = userId }
+        );
+    if (rowsChanged == 0) { return -1; }
+    // TODO: start transaction to rollback if assert fails
+    Debug.Assert(rowsChanged == 1);
+    return GetCoins(userId);
   }
 }
