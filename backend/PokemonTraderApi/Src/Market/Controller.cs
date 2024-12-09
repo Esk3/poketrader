@@ -14,28 +14,31 @@ public class MarketController : Util.MyControllerBase
   }
 
   [HttpGet]
-  public void GetAllOpenTrades() { }
+  public void GetAllOpenListings() { }
 
-  [HttpGet("{tradeId}")]
-  public void GetTrade(long tradeId) { }
+  [HttpGet("{listingId}")]
+  public void GetListing(long listingId) { }
 
   [HttpGet("user")]
   [Authorize]
-  public void GetUserTrades() { }
+  public void GetUserListings() { }
 
   [HttpPost("new")]
   [Authorize]
-  public void CreateTrade() { }
+  public void CreateListing() { }
 
-  [HttpPost("{tradeId}/bid")]
-  [Authorize]
-  public void BidOntrade(int amount, long tradeId) { }
+  [HttpGet("{listingId}/bids")]
+  public void GetBidsOnListing(long listingId) { }
 
-  [HttpPost("{tradeId}/finish")]
+  [HttpPost("{listingId}/bid")]
   [Authorize]
-  public void FinishTrade(long tradeId) { }
+  public void BidOnListing(int amount, long listingId) { }
 
-  [HttpPost("{tradeId}/cancel")]
+  [HttpPost("{listingId}/finish")]
   [Authorize]
-  public void CancelTrade(long tradeId) { }
+  public void FinishListing(long listingId) { }
+
+  [HttpPost("{listingId}/cancel")]
+  [Authorize]
+  public void CancelListing(long listingId) { }
 }

@@ -2,7 +2,11 @@ using PokemonTraderApi.Data;
 
 namespace PokemonTraderApi.Profile;
 
-public interface IRepository { }
+public interface IRepository
+{
+  public void Setup();
+  public bool Test();
+}
 
 public class Repository : IRepository
 {
@@ -10,5 +14,15 @@ public class Repository : IRepository
   public Repository(AppDbContext context)
   {
     _context = context;
+  }
+
+  public void Setup()
+  {
+
+  }
+
+  public bool Test()
+  {
+    return true;
   }
 }

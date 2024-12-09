@@ -4,6 +4,8 @@ namespace PokemonTraderApi.Shop;
 
 public interface IRepository
 {
+  public void Setup();
+  public bool Test();
   public List<ShopItem> GetItems();
   public ShopItem? GetItem(long itemId);
   public ShopItem? BuyItem(long itemId, User.PokemonUser user);
@@ -36,5 +38,14 @@ public class Repository : IRepository
   public ShopItem? SellItem(long inventoryItemId, User.PokemonUser user)
   {
     throw new NotImplementedException();
+  }
+
+  public void Setup()
+  {
+  }
+
+  public bool Test()
+  {
+    return true;
   }
 }

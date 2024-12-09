@@ -1,11 +1,16 @@
 using PokemonTraderApi.Data;
+using System.Diagnostics;
 using Dapper;
+using Microsoft.AspNetCore.Identity;
 
 namespace PokemonTraderApi.User;
 
 public interface IRepository
 {
+  public void Setup();
+  public bool Test();
   public PokemonUser? GetByName(string name);
+  public void Register(IdentityUser user);
 }
 
 public class Repository : IRepository
@@ -17,16 +22,17 @@ public class Repository : IRepository
     Setup();
   }
 
-  private void Setup()
+  public void Setup()
   {
     _context.GetConnection().Execute(@"
         create table if not exists pokemon_users (
-          auth_user_id integer primary key,
-          pokemon_user_id not null autoincrement,
+          auth_user_id integer primary key autoincrement,
+          pokemon_user_id integer not null,
           foreign key (auth_user_id) references auth_users(auth_user_id)
           )
         ");
   }
+  public bool Test() { return true; }
 
   public PokemonUser? GetByName(string name)
   {
@@ -39,4 +45,12 @@ public class Repository : IRepository
         ", new { Username = name });
   }
 
+  public void Register(IdentityUser user)
+  {
+    Console.WriteLine("here");
+    int rowsInserted = _context.GetConnection().Execute(@"
+        insert into pokemon_users (auth_user_id, pokemon_user_id) values (@Id, @Id)
+        ", new { Id = user.Id });
+    Debug.Assert(rowsInserted == 1);
+  }
 }

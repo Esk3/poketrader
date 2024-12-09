@@ -4,6 +4,8 @@ using Dapper;
 namespace PokemonTraderApi.Inventory;
 public interface IRepository
 {
+  public void Setup();
+  public bool Test();
   public List<Item> GetAllItems(User.PokemonUser user);
   public List<Item> GetItemsOfType(long pokemonId, User.PokemonUser user);
   public Item? GetItem(long itemId, User.PokemonUser user);
@@ -16,7 +18,7 @@ public class Repository : IRepository
     _context = context;
     Setup();
   }
-  private void Setup()
+  public void Setup()
   {
     _context.GetConnection().Execute(@"
         create table if not exists card_inventory (
@@ -30,7 +32,8 @@ public class Repository : IRepository
 
   public Item? GetItem(long itemId, User.PokemonUser user)
   {
-    return _context.GetConnection().QuerySingleOrDefault<Item>("select * from card_inventory where inventory_id = @ItemId and pokemon_user_id = @UserId", new { ItemId = itemId, UserId = user.pokemonUserId });
+    return _context.GetConnection()
+      .QuerySingleOrDefault<Item>("select * from card_inventory where inventory_id = @ItemId and pokemon_user_id = @UserId", new { ItemId = itemId, UserId = user.pokemonUserId });
   }
 
   public List<Item> GetAllItems(User.PokemonUser user)
@@ -44,5 +47,10 @@ public class Repository : IRepository
   public List<Item> GetItemsOfType(long pokemonId, User.PokemonUser user)
   {
     throw new NotImplementedException();
+  }
+
+  public bool Test()
+  {
+    return true;
   }
 }

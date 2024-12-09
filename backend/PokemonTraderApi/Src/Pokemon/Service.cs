@@ -4,6 +4,8 @@ namespace PokemonTraderApi.Pokemon;
 
 public interface IRepository
 {
+  public void Setup();
+  public bool Test();
   public List<PokemonName> GetNames();
 }
 
@@ -18,5 +20,14 @@ public class Repository : IRepository
   public List<PokemonName> GetNames()
   {
     return new List<PokemonName> { new PokemonName { name = "hello" }, new PokemonName { name = "world" } };
+  }
+
+  public void Setup()
+  {
+  }
+
+  public bool Test()
+  {
+    return true;
   }
 }

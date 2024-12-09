@@ -18,10 +18,16 @@ public class AuthController : MyControllerBase
 
   [HttpPost("register")]
   [AllowAnonymous]
-  public async void Register(Form.Register data)
+  public async Task<ActionResult> Register(Form.Register data, User.IRepository pokemonUserRepository)
   {
     var user = new IdentityUser { UserName = data.UserName };
-    await _userManager.CreateAsync(user);
+    var result = await _userManager.CreateAsync(user);
+    Console.WriteLine(result.Succeeded);
+    Console.WriteLine(result.Errors.FirstOrDefault());
+    if (!result.Succeeded) return BadRequest("failed to register");
+    user = await _userManager.FindByNameAsync(user.UserName);
+    pokemonUserRepository.Register(user);
+    return Ok();
   }
 
   [HttpPost("signin")]

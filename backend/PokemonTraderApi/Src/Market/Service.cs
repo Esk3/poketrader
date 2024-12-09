@@ -5,6 +5,8 @@ namespace PokemonTraderApi.Market;
 
 public interface IRepository
 {
+  public void Setup();
+  public bool Test();
   public List<Listing> GetAllOpenListings();
   public Listing? GetListing(long listingId);
   public List<Listing> GetUserListings(User.PokemonUser user);
@@ -23,11 +25,16 @@ public class Repository : IRepository
     Setup();
   }
 
-  private void Setup()
+  public void Setup()
   {
     _context.GetConnection().Execute(@"
         create table if not exists listings (
           listing_id integer primary key autoincrement,
+          pokemon_user_id integer not null,
+          create_timestamp timestamp not null default current_timestamp,
+          closed_timestamp timestamp,
+          cancled bool not null default false,
+          foreign key (pokemon_user_id) references pokemon_users(pokemon_user_id)
           )
         ");
     _context.GetConnection().Execute(@"
@@ -74,5 +81,10 @@ public class Repository : IRepository
   public List<Listing> GetUserListings(User.PokemonUser user)
   {
     throw new NotImplementedException();
+  }
+
+  public bool Test()
+  {
+    return true;
   }
 }

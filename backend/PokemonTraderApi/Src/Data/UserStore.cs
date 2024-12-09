@@ -36,8 +36,7 @@ public class UserStore : IUserStore<IdentityUser>,
     await _conn().ExecuteAsync(@"
         insert into auth_users (username) values (@UserName)
         ", new { UserName = user.UserName });
-    return new IdentityResult();
-    throw new NotImplementedException();
+    return IdentityResult.Success;
   }
 
   public Task<IdentityResult> DeleteAsync(IdentityUser user, CancellationToken cancellationToken)
@@ -50,7 +49,7 @@ public class UserStore : IUserStore<IdentityUser>,
   public async Task<IdentityUser?> FindByIdAsync(string userId, CancellationToken cancellationToken)
   {
     var user = await _conn().QuerySingleOrDefaultAsync<IdentityUser>(@"
-        select auth_user_id as id, username from auth_users where user_id = @Id
+        select auth_user_id as id, username from auth_users where auth_user_id = @Id
         ", new { Id = userId });
     return user;
     throw new NotImplementedException();

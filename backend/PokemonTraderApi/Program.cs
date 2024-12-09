@@ -26,6 +26,7 @@ public class Program
       options.DefaultSignInScheme = IdentityConstants.ExternalScheme;
     }).AddIdentityCookies();
 
+
     builder.Services.ConfigureApplicationCookie(options =>
 {
   options.Events.OnRedirectToLogin = context =>
@@ -46,21 +47,24 @@ public class Program
             });
         });
 
-    builder.Services.AddTransient<Inventory.IRepository, Inventory.Repository>();
-    builder.Services.AddTransient<Pokemon.IRepository, Pokemon.Repository>();
-    builder.Services.AddTransient<User.IRepository, User.Repository>();
+    builder.Services.AddRepositoriesServicesGroup();
+
     builder.Services.AddControllers();
     // Learn more about configuring Swagger/OpenAPI at https://aka.ms/aspnetcore/swashbuckle
     builder.Services.AddEndpointsApiExplorer();
     builder.Services.AddSwaggerGen();
 
+
     var app = builder.Build();
+
+    app.SetupRespositoriesServices();
 
     // Configure the HTTP request pipeline.
     if (app.Environment.IsDevelopment())
     {
       app.UseSwagger();
       app.UseSwaggerUI();
+      app.TestRepositoriesServices();
     }
 
     app.UseCors(allowAllOrigins);
