@@ -1,6 +1,5 @@
 <script lang="ts">
 const { children, data }: any = $props();
-const coins = $state(234);
 console.log(data.user);
 </script>
 
@@ -13,7 +12,7 @@ console.log(data.user);
   </li>
 {/each}
 <li class="split"></li>
-<li>Coins: {coins}</li>
+<li>Coins: {data.user.coins}</li>
 {#if !data.user}
 <li><a href="/register">Register</a></li>
 <li><a href="/login">Login</a></li>

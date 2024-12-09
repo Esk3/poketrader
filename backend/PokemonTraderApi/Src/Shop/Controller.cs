@@ -22,6 +22,24 @@ public class ShopController : Util.MyControllerBase
     return _repo.GetItems();
   }
 
+  [HttpGet("pokemon")]
+  public ActionResult<List<ShopPokemon>> GetPokemon()
+  {
+    return _repo.GetPokemon();
+  }
+
+  [HttpGet("pokemon/id/{pokemonId}")]
+  public ActionResult<ShopPokemon?> GetPokemonById(long pokemonId)
+  {
+    return _repo.GetPokemonById(pokemonId);
+  }
+
+  [HttpGet("pokemon/name/{name}")]
+  public ActionResult<ShopPokemon?> GetPokemonByName(string name)
+  {
+    return _repo.GetPokemonByName(name);
+  }
+
   [HttpGet("{pokemonId}")]
   public async Task<ActionResult<ShopItem?>> GetById(long pokemonId)
   {

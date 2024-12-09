@@ -1,11 +1,10 @@
 
-import { PokemonUrl } from "$lib";
-import type { PageLoad } from "./$types";
+import { ApiUrl } from "$lib";
 
-export const load: PageLoad = async ({ fetch }) => {
+export const load = async ({ fetch }: any) => {
   try {
-    const res = await fetch(PokemonUrl + "/pokemon");
-    const data: PokemonQueryResult = await res.json();
+    const res = await fetch("/API/Shop/pokemon");
+    const data = await res.json();
     return { pokemon: data }
   }
   catch (err) {

@@ -1,10 +1,10 @@
 <script>
-  import PokemonNameList from "../pokemon/PokemonNameList.svelte";
+  import PokemonList from "./PokemonList.svelte";
   const { children, data } = $props();
 </script>
 
 <div>
-<PokemonNameList pokemon={data.pokemon} />
+<PokemonList pokemon={data.pokemon}/>
 
 {@render children()}
 </div>

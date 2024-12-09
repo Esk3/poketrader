@@ -9,6 +9,9 @@ public interface IRepository
   public void Setup();
   public bool Test();
   public List<ShopItem> GetItems();
+  public List<ShopPokemon> GetPokemon();
+  public ShopPokemon? GetPokemonById(long pokemonId);
+  public ShopPokemon? GetPokemonByName(string name);
   public Task<ShopItem?> GetItem(long itemId);
   public Task<ShopItem?> BuyItem(long itemId, User.PokemonUser user, SqliteTransaction? transaction = null);
   public Task<ShopItem?> SellItem(long inventoryItemId, User.PokemonUser user, SqliteTransaction? transaction = null);
@@ -19,14 +22,16 @@ public class Repository : IRepository
   private readonly AppDbContext _context;
   private readonly Inventory.IRepository _inventoryRepo;
   private readonly Pokemon.IRepository _pokemonRepo;
+  private readonly User.IRepository _usersRepo;
   private readonly Random _random;
 
-  public Repository(AppDbContext context, Inventory.IRepository inventoryRepository, Pokemon.IRepository pokemonRepository)
+  public Repository(AppDbContext context, Inventory.IRepository inventoryRepository, Pokemon.IRepository pokemonRepository, User.IRepository usersRepository)
   {
     _context = context;
     _inventoryRepo = inventoryRepository;
     _pokemonRepo = pokemonRepository;
     _random = new Random();
+    _usersRepo = usersRepository;
   }
 
   public void Setup()
@@ -70,6 +75,8 @@ public class Repository : IRepository
     }
 
     var item = await GetItem(itemId);
+    var coinsRemaining = _usersRepo.TryUpdateCoins(-item.cost, user.pokemonUserId);
+    if (coinsRemaining == -1) return null;
     _inventoryRepo.InsertItem(itemId, user, transaction);
     await _context.GetConnection().ExecuteAsync(
         @"insert into transfers (sender_pokemon_user_id, amount) values (@Id, @Amount)",
@@ -126,6 +133,7 @@ public class Repository : IRepository
     var inventoryItem = _inventoryRepo.GetItem(inventoryItemId, user);
     _inventoryRepo.DeleteItem(inventoryItemId, user, transaction);
     var item = await GetItem(inventoryItem.PokemonId);
+    _usersRepo.UpdateCoins(item.cost, user.pokemonUserId);
     _context.GetConnection().Execute(
         @"insert into transfers (reciver_pokemon_user_id, amount) values (@Id, @Amount)",
         new { Id = user.pokemonUserId, Amount = item.cost },
@@ -134,4 +142,31 @@ public class Repository : IRepository
     return null;
   }
 
+  public List<ShopPokemon> GetPokemon()
+  {
+    return _context.GetConnection().Query<ShopPokemon>(
+        @"select * from shop_items si 
+          join pokemon p on p.pokemon_id = si.pokemon_id"
+        ).ToList();
+  }
+
+  public ShopPokemon? GetPokemonById(long pokemonId)
+  {
+    return _context.GetConnection().QuerySingleOrDefault<ShopPokemon>(
+        @"select * from shop_items si 
+          join pokemon p on p.pokemon_id = si.pokemon_id
+          where p.pokemon_id = @Id",
+          new { Id = pokemonId }
+        );
+  }
+
+  public ShopPokemon? GetPokemonByName(string name)
+  {
+    return _context.GetConnection().QuerySingleOrDefault<ShopPokemon>(
+        @"select * from shop_items si 
+          join pokemon p on p.pokemon_id = si.pokemon_id
+          where p.name = @Name",
+          new { Name = name }
+        );
+  }
 }

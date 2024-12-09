@@ -1,13 +1,10 @@
 
 export const load = async ({ fetch, cookies }: any) => {
   const id = cookies.get(".AspNetCore.Identity.Application");
-  let user;
+  let user: { username: string, pokemonUserId: string, coins: number } | undefined;
   if (id) {
     const res = await fetch("/API/User");
-    const username = await res.text();
-    user = {
-      username
-    };
+    user = await res.json();
   }
   const pages = [
     { href: "/", name: "Home" },
