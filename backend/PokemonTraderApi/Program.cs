@@ -47,6 +47,7 @@ public class Program
             });
         });
 
+    builder.Services.AddTransient<PokeApi.IPokeApiClient, PokeApi.PokeApiClient>();
     builder.Services.AddRepositoriesServicesGroup();
 
     builder.Services.AddControllers();

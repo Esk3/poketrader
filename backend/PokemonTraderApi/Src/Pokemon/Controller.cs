@@ -13,19 +13,19 @@ public class PokemonController : Util.MyControllerBase
   }
 
   [HttpGet]
-  public ActionResult<List<PokemonName>> GetAll()
+  public ActionResult<List<PokemonSprite>> GetAll()
   {
     return _repo.GetNames();
   }
 
-  [HttpGet("{pokemonId}")]
-  public ActionResult<PokemonName> GetById(long pokemonId)
+  [HttpGet("id/{pokemonId}")]
+  public async Task<ActionResult<PokemonSprite?>> GetById(long pokemonId)
   {
-    return null;
+    return await _repo.GetById(pokemonId);
   }
 
-  [HttpGet("{name}")]
-  public ActionResult<PokemonName> GetByName(string name)
+  [HttpGet("name/{name}")]
+  public ActionResult<PokemonName?> GetByName(string name)
   {
     return null;
   }
