@@ -9,7 +9,7 @@ public interface IRepository
   public bool Test();
   public List<PokemonSprite> GetNames();
   public Task<PokemonSprite?> GetById(long pokemonId);
-  public PokemonSprite? GetByName(string name);
+  public Task<PokemonSprite?> GetByName(string name);
 }
 
 public class Repository : IRepository
@@ -47,7 +47,7 @@ public class Repository : IRepository
 
   public async Task<PokemonSprite?> GetById(long pokemonId)
   {
-    var pokemon = _context.GetConnection().QuerySingleOrDefault<PokemonSprite>(
+    var pokemon = await _context.GetConnection().QuerySingleOrDefaultAsync<PokemonSprite>(
         @"select * from pokemon
         where pokemon_id = @Id",
         new { Id = pokemonId }
@@ -58,10 +58,7 @@ public class Repository : IRepository
       if (Pokemon is not null)
       {
         pokemon = new PokemonSprite { pokemonId = Pokemon.Id, name = Pokemon.Name, spriteUrl = GetSpriteUrl(Pokemon.Id) };
-        _context.GetConnection().Execute(
-            "insert into pokemon (pokemon_id, name, sprite_url) values (@Id, @Name, @SpriteUrl)",
-            new { Id = pokemon.pokemonId, Name = pokemon.name, SpriteUrl = pokemon.spriteUrl }
-            );
+        InsertPokemon(pokemon);
       }
     }
     return pokemon;
@@ -71,13 +68,31 @@ public class Repository : IRepository
     return "https://raw.githubusercontent.com/PokeAPI/sprites/master/sprites/pokemon/" + pokemonId + ".png";
   }
 
-  public PokemonSprite? GetByName(string name)
+  public async Task<PokemonSprite?> GetByName(string name)
   {
-    return _context.GetConnection()
-      .QuerySingleOrDefault(
+    var pokemon = await _context.GetConnection()
+      .QuerySingleOrDefaultAsync(
           @"select * from pokemon
           where name like @Name",
           new { Name = name }
           );
+    if (pokemon is null)
+    {
+      var Pokemon = await _pokeApiClient.GetByName(name);
+      if (Pokemon is not null)
+      {
+        pokemon = new PokemonSprite { pokemonId = Pokemon.Id, name = Pokemon.Name, spriteUrl = GetSpriteUrl(Pokemon.Id) };
+        InsertPokemon(pokemon);
+      }
+    }
+    return pokemon;
+  }
+
+  public async void InsertPokemon(PokemonSprite pokemon)
+  {
+    await _context.GetConnection().ExecuteAsync(
+        "insert into pokemon (pokemon_id, name, sprite_url) values (@Id, @Name, @SpriteUrl)",
+        new { Id = pokemon.pokemonId, Name = pokemon.name, SpriteUrl = pokemon.spriteUrl }
+        );
   }
 }

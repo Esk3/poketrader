@@ -72,8 +72,7 @@ public class Repository : IRepository
     var res = _context.GetConnection().QuerySingle(
         @"insert into card_inventory (pokemon_user_id, pokemon_id) values (@UserId, @PokemonId);
           select cast(last_insert_rowid() as int) as id",
-        new { UserId = user.pokemonUserId, PokemonId = pokemonId },
-        transaction
+        new { UserId = user.pokemonUserId, PokemonId = pokemonId }
         );
     var id = res.id;
     return id;

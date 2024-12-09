@@ -25,8 +25,8 @@ public class PokemonController : Util.MyControllerBase
   }
 
   [HttpGet("name/{name}")]
-  public ActionResult<PokemonName?> GetByName(string name)
+  public async Task<ActionResult<PokemonSprite?>> GetByName(string name)
   {
-    return null;
+    return await _repo.GetByName(name);
   }
 }

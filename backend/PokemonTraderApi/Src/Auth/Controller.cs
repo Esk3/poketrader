@@ -22,8 +22,7 @@ public class AuthController : MyControllerBase
   {
     var user = new IdentityUser { UserName = data.UserName };
     var result = await _userManager.CreateAsync(user);
-    Console.WriteLine(result.Succeeded);
-    Console.WriteLine(result.Errors.FirstOrDefault());
+    if (!result.Succeeded) Console.WriteLine(result.Errors.FirstOrDefault());
     if (!result.Succeeded) return BadRequest("failed to register");
     user = await _userManager.FindByNameAsync(user.UserName);
     pokemonUserRepository.Register(user);

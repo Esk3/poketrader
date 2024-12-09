@@ -58,6 +58,7 @@ public class Program
 
     var app = builder.Build();
 
+    ((Data.UserStore)app.Services.GetRequiredService<IUserStore<IdentityUser>>()).Setup();
     app.SetupRespositoriesServices();
 
     // Configure the HTTP request pipeline.

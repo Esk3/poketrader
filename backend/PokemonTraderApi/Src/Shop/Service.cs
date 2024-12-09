@@ -9,20 +9,24 @@ public interface IRepository
   public void Setup();
   public bool Test();
   public List<ShopItem> GetItems();
-  public ShopItem? GetItem(long itemId);
-  public ShopItem? BuyItem(long itemId, User.PokemonUser user, SqliteTransaction? transaction = null);
-  public ShopItem? SellItem(long inventoryItemId, User.PokemonUser user, SqliteTransaction? transaction = null);
+  public Task<ShopItem?> GetItem(long itemId);
+  public Task<ShopItem?> BuyItem(long itemId, User.PokemonUser user, SqliteTransaction? transaction = null);
+  public Task<ShopItem?> SellItem(long inventoryItemId, User.PokemonUser user, SqliteTransaction? transaction = null);
 }
 
 public class Repository : IRepository
 {
   private readonly AppDbContext _context;
   private readonly Inventory.IRepository _inventoryRepo;
+  private readonly Pokemon.IRepository _pokemonRepo;
+  private readonly Random _random;
 
-  public Repository(AppDbContext context, Inventory.IRepository inventoryRepository)
+  public Repository(AppDbContext context, Inventory.IRepository inventoryRepository, Pokemon.IRepository pokemonRepository)
   {
     _context = context;
     _inventoryRepo = inventoryRepository;
+    _pokemonRepo = pokemonRepository;
+    _random = new Random();
   }
 
   public void Setup()
@@ -38,14 +42,14 @@ public class Repository : IRepository
     _context.GetConnection().Execute(
         @"create table if not exists transfers (
           transfer_id integer primary key autoincrement,
-          reciver_pokemon_user_id integer,
           sender_pokemon_user_id integer,
+          reciver_pokemon_user_id integer,
           amount integer,
           item_id integer,
           timestamp timestamp not null default current_timestamp,
           foreign key (reciver_pokemon_user_id) references pokemon_users(pokemon_user_id),
           foreign key (sender_pokemon_user_id) references pokemon_users(pokemon_user_id),
-          foreign key (item_id) references inventory(item_id)
+          foreign key (item_id) references card_inventory(inventory_id)
           )
         ");
   }
@@ -55,33 +59,56 @@ public class Repository : IRepository
     return true;
   }
 
-  public ShopItem? BuyItem(long itemId, User.PokemonUser user, SqliteTransaction? transaction = null)
+  public async Task<ShopItem?> BuyItem(long itemId, User.PokemonUser user, SqliteTransaction? transaction = null)
   {
-    bool commit = transaction is null;
-    if (transaction is null)
+    /*bool commit = transaction is null;*/
+    bool commit = false;
+    if (transaction is null && false)
     {
       _context.GetConnection().Open();
       transaction = _context.GetConnection().BeginTransaction();
     }
 
-    var item = GetItem(itemId);
+    var item = await GetItem(itemId);
     _inventoryRepo.InsertItem(itemId, user, transaction);
-    _context.GetConnection().Execute(
+    await _context.GetConnection().ExecuteAsync(
         @"insert into transfers (sender_pokemon_user_id, amount) values (@Id, @Amount)",
-        new { Id = user.pokemonUserId, Amount = item },
-        transaction
+        new { Id = user.pokemonUserId, Amount = item.cost }
         );
     if (commit) { transaction.Commit(); }
     return null;
   }
 
-  public ShopItem? GetItem(long itemId)
+  public async Task<ShopItem?> GetItem(long itemId)
   {
-    return _context.GetConnection().QuerySingleOrDefault(
+    ShopItem? item = await _context.GetConnection().QuerySingleOrDefaultAsync<ShopItem>(
         @"
         select * from shop_items
         where pokemon_id = @Id
         ", new { Id = itemId }
+        );
+    if (item is null)
+    {
+      item = await Insert(itemId);
+    }
+    return item;
+  }
+
+  public async Task<ShopItem?> Insert(long itemId)
+  {
+    var pokemon = await _pokemonRepo.GetById(itemId);
+    if (pokemon is null) return null;
+    int Cost = _random.Next(60, 180);
+    var result = await _context.GetConnection().QuerySingleAsync(
+        @"insert into shop_items (pokemon_id, cost)
+        values (@Id, @Cost);
+        select cast(last_insert_rowid() as int) as id",
+        new { Id = pokemon.pokemonId, Cost }
+        );
+    return await _context.GetConnection().QuerySingleAsync(
+        @"select * from shop_items
+        where pokemon_id = @Id",
+        new { Id = result.id }
         );
   }
 
@@ -89,19 +116,19 @@ public class Repository : IRepository
   {
     return _context.GetConnection().Query<ShopItem>(
         @"
-        select Æ from shop_items
+        select * from shop_items
         "
         ).ToList();
   }
 
-  public ShopItem? SellItem(long inventoryItemId, User.PokemonUser user, SqliteTransaction? transaction = null)
+  public async Task<ShopItem?> SellItem(long inventoryItemId, User.PokemonUser user, SqliteTransaction? transaction = null)
   {
     var inventoryItem = _inventoryRepo.GetItem(inventoryItemId, user);
     _inventoryRepo.DeleteItem(inventoryItemId, user, transaction);
-    var item = GetItem(inventoryItem.PokemonId);
+    var item = await GetItem(inventoryItem.PokemonId);
     _context.GetConnection().Execute(
         @"insert into transfers (reciver_pokemon_user_id, amount) values (@Id, @Amount)",
-        new { Id = user.pokemonUserId, Amount = item },
+        new { Id = user.pokemonUserId, Amount = item.cost },
         transaction
         );
     return null;

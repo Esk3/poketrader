@@ -21,7 +21,7 @@ public class UserStore : IUserStore<IdentityUser>,
     Setup();
   }
 
-  void Setup()
+  public void Setup()
   {
     _conn().Execute(@"
         create table if not exists auth_users (
