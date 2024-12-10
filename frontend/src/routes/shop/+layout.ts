@@ -3,7 +3,8 @@ import { ApiUrl } from "$lib";
 
 export const load = async ({ fetch }: any) => {
   try {
-    const res = await fetch("/API/Shop/pokemon");
+    const url = ApiUrl + "Shop/pokemon";
+    const res = await fetch(url);
     const data = await res.json();
     return { pokemon: data }
   }

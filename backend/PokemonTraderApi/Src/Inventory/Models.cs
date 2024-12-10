@@ -3,6 +3,6 @@ namespace PokemonTraderApi.Inventory;
 public class Item
 {
 
-  public int ItemId { get; set; }
+  public int inventoryId { get; set; }
   public int PokemonId { get; set; }
 }

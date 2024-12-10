@@ -8,6 +8,6 @@ number
 
 {#each data.inventory as item}
   <div>
-    {item.itemId}
+    {item.inventoryId}
   </div>
 {/each}
