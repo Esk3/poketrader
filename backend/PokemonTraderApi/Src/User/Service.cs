@@ -10,7 +10,6 @@ public interface IRepository
 {
   public void Setup();
   public bool Test();
-  public PokemonUser? GetByName(string name, SqliteTransaction? transaction = null);
   public void Register(IdentityUser user, SqliteTransaction? transaction = null);
 
   public long GetCoins(long userId);
@@ -19,7 +18,7 @@ public interface IRepository
   public long TryUpdateCoins(int change, long userId);
 }
 
-public class Repository : IRepository
+public class Repository : IRepository, IUserStore<PokemonUser>, IDisposable
 {
   private readonly AppDbContext _context;
   public Repository(AppDbContext context)
@@ -75,19 +74,6 @@ public class Repository : IRepository
     return true;
   }
 
-  public PokemonUser? GetByName(string name, SqliteTransaction? transaction = null)
-  {
-    return _context.GetConnection().QuerySingleOrDefault<PokemonUser>(@"
-        select * 
-        from pokemon_users pu 
-        join auth_users au 
-        on au.auth_user_id = pu.auth_user_id
-        where au.username = @Username
-        ",
-        new { Username = name },
-        transaction);
-  }
-
   public void Register(IdentityUser user, SqliteTransaction? transaction = null)
   {
     int rowsInserted = _context.GetConnection().Execute(@"
@@ -138,5 +124,73 @@ public class Repository : IRepository
     // TODO: start transaction to rollback if assert fails
     Debug.Assert(rowsChanged == 1);
     return GetCoins(userId);
+  }
+
+  public Task<string> GetUserIdAsync(PokemonUser user, CancellationToken cancellationToken)
+  {
+    throw new NotImplementedException();
+  }
+
+  public Task<string?> GetUserNameAsync(PokemonUser user, CancellationToken cancellationToken)
+  {
+    throw new NotImplementedException();
+  }
+
+  public Task SetUserNameAsync(PokemonUser user, string? userName, CancellationToken cancellationToken)
+  {
+    throw new NotImplementedException();
+  }
+
+  public Task<string?> GetNormalizedUserNameAsync(PokemonUser user, CancellationToken cancellationToken)
+  {
+    throw new NotImplementedException();
+  }
+
+  public Task SetNormalizedUserNameAsync(PokemonUser user, string? normalizedName, CancellationToken cancellationToken)
+  {
+    throw new NotImplementedException();
+  }
+
+  public Task<IdentityResult> CreateAsync(PokemonUser user, CancellationToken cancellationToken)
+  {
+    throw new NotImplementedException();
+  }
+
+  public Task<IdentityResult> UpdateAsync(PokemonUser user, CancellationToken cancellationToken)
+  {
+    throw new NotImplementedException();
+  }
+
+  public Task<IdentityResult> DeleteAsync(PokemonUser user, CancellationToken cancellationToken)
+  {
+    throw new NotImplementedException();
+  }
+
+  public async Task<PokemonUser?> FindByIdAsync(string userId, CancellationToken cancellationToken)
+  {
+    return await _context.GetConnection().QuerySingleOrDefaultAsync<PokemonUser>(
+        @"select * from pokemon_users pu
+        join auth_users au 
+        on au.auth_user_id = pu.auth_user_id
+        where au.auth_user_id = @UserId",
+        new { UserId = userId }
+        );
+  }
+
+  public async Task<PokemonUser?> FindByNameAsync(string normalizedUserName, CancellationToken cancellationToken)
+  {
+    return await _context.GetConnection().QuerySingleOrDefaultAsync<PokemonUser>(@"
+        select * 
+        from pokemon_users pu 
+        join auth_users au 
+        on au.auth_user_id = pu.auth_user_id
+        where au.username = @Username
+        ",
+        new { Username = normalizedUserName }
+        );
+  }
+
+  public void Dispose()
+  {
   }
 }

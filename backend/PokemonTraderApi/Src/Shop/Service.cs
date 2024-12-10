@@ -23,15 +23,23 @@ public class Repository : IRepository
   private readonly Inventory.IRepository _inventoryRepo;
   private readonly Pokemon.IRepository _pokemonRepo;
   private readonly User.IRepository _usersRepo;
+  private readonly TransferRecord.IRepository _transferRepo;
   private readonly Random _random;
 
-  public Repository(AppDbContext context, Inventory.IRepository inventoryRepository, Pokemon.IRepository pokemonRepository, User.IRepository usersRepository)
+  public Repository(
+      AppDbContext context,
+      Inventory.IRepository inventoryRepository,
+      Pokemon.IRepository pokemonRepository,
+      User.IRepository usersRepository,
+      TransferRecord.IRepository transferRepository
+      )
   {
     _context = context;
     _inventoryRepo = inventoryRepository;
     _pokemonRepo = pokemonRepository;
     _random = new Random();
     _usersRepo = usersRepository;
+    _transferRepo = transferRepository;
   }
 
   public void Setup()
@@ -43,20 +51,6 @@ public class Repository : IRepository
           foreign key (pokemon_id) references pokemon(pokemon_id)
           )"
         );
-
-    _context.GetConnection().Execute(
-        @"create table if not exists transfers (
-          transfer_id integer primary key autoincrement,
-          sender_pokemon_user_id integer,
-          reciver_pokemon_user_id integer,
-          amount integer,
-          item_id integer,
-          timestamp timestamp not null default current_timestamp,
-          foreign key (reciver_pokemon_user_id) references pokemon_users(pokemon_user_id),
-          foreign key (sender_pokemon_user_id) references pokemon_users(pokemon_user_id),
-          foreign key (item_id) references card_inventory(inventory_id)
-          )
-        ");
   }
 
   public bool Test()
@@ -66,6 +60,7 @@ public class Repository : IRepository
 
   public async Task<ShopItem?> BuyItem(long itemId, User.PokemonUser user, SqliteTransaction? transaction = null)
   {
+    // TODO: transaction
     /*bool commit = transaction is null;*/
     bool commit = false;
     if (transaction is null && false)
@@ -78,10 +73,7 @@ public class Repository : IRepository
     var coinsRemaining = _usersRepo.TryUpdateCoins(-item.cost, user.pokemonUserId);
     if (coinsRemaining == -1) return null;
     _inventoryRepo.InsertItem(itemId, user, transaction);
-    await _context.GetConnection().ExecuteAsync(
-        @"insert into transfers (sender_pokemon_user_id, amount) values (@Id, @Amount)",
-        new { Id = user.pokemonUserId, Amount = item.cost }
-        );
+    _transferRepo.RecordTransfer(null, user.pokemonUserId, item.cost);
     if (commit) { transaction.Commit(); }
     return null;
   }
@@ -130,15 +122,12 @@ public class Repository : IRepository
 
   public async Task<ShopItem?> SellItem(long inventoryItemId, User.PokemonUser user, SqliteTransaction? transaction = null)
   {
+    // TODO: transaction
     var inventoryItem = _inventoryRepo.GetItem(inventoryItemId, user);
     _inventoryRepo.DeleteItem(inventoryItemId, user, transaction);
     var item = await GetItem(inventoryItem.PokemonId);
     _usersRepo.UpdateCoins(item.cost, user.pokemonUserId);
-    _context.GetConnection().Execute(
-        @"insert into transfers (reciver_pokemon_user_id, amount) values (@Id, @Amount)",
-        new { Id = user.pokemonUserId, Amount = item.cost },
-        transaction
-        );
+    _transferRepo.RecordTransfer(user.pokemonUserId, null, item.cost);
     return null;
   }
 

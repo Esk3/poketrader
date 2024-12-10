@@ -8,9 +8,9 @@ namespace PokemonTraderApi.User.Controller;
 public class UserController : Util.MyControllerBase
 {
   private readonly IRepository _repo;
-  private readonly UserManager<IdentityUser> _userManager;
+  private readonly UserManager<PokemonUser> _userManager;
 
-  public UserController(IRepository repository, UserManager<IdentityUser> userManager)
+  public UserController(IRepository repository, UserManager<PokemonUser> userManager)
   {
     _repo = repository;
     _userManager = userManager;
@@ -20,8 +20,7 @@ public class UserController : Util.MyControllerBase
   [Authorize]
   public async Task<ActionResult<PokemonUser>> GetUserInfo()
   {
-    var idUser = await _userManager.GetUserAsync(User);
-    var user = new PokemonUser(idUser);
+    var user = await _userManager.GetUserAsync(User);
     user.coins = _repo.GetCoins(user.pokemonUserId);
     return user;
   }
@@ -30,8 +29,7 @@ public class UserController : Util.MyControllerBase
   [Authorize]
   public async Task<ActionResult<long>> GetCoins()
   {
-    var idUser = await _userManager.GetUserAsync(User);
-    var user = new PokemonUser(idUser);
+    var user = await _userManager.GetUserAsync(User);
     return _repo.GetCoins(user.pokemonUserId);
   }
 
@@ -39,8 +37,7 @@ public class UserController : Util.MyControllerBase
   [Authorize]
   public async Task<ActionResult<long>> GetFreeCoins()
   {
-    var idUser = await _userManager.GetUserAsync(User);
-    var user = new PokemonUser(idUser);
+    var user = await _userManager.GetUserAsync(User);
     return _repo.UpdateCoins(300, user.pokemonUserId);
   }
 }

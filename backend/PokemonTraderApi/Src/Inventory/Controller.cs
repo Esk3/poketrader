@@ -1,6 +1,7 @@
 using Microsoft.AspNetCore.Authorization;
 using PokemonTraderApi.Util;
 using Microsoft.AspNetCore.Mvc;
+using Microsoft.AspNetCore.Identity;
 
 namespace PokemonTraderApi.Inventory.Controller;
 
@@ -10,31 +11,33 @@ public class InventoryController : MyControllerBase
 {
   private readonly IRepository _repo;
   private readonly User.IRepository _userRepo;
+  readonly UserManager<User.PokemonUser> _userManager;
 
-  public InventoryController(IRepository repository, User.IRepository userRepository)
+  public InventoryController(IRepository repository, User.IRepository userRepository, UserManager<User.PokemonUser> userManager)
   {
     _repo = repository;
     _userRepo = userRepository;
+    _userManager = userManager;
   }
 
   [HttpGet]
-  public ActionResult<List<Item>> GetInventory()
+  public async Task<ActionResult<List<Item>>> GetInventory()
   {
-    var user = _userRepo.GetByName(User.Identity.Name);
+    var user = await _userManager.GetUserAsync(User);
     return _repo.GetAllItems(user);
   }
 
   [HttpGet("{typeId}")]
-  public ActionResult<List<Item>> GetItemsOfType(long typeId)
+  public async Task<ActionResult<List<Item>>> GetItemsOfType(long typeId)
   {
-    var user = _userRepo.GetByName(User.Identity.Name);
+    var user = await _userManager.GetUserAsync(User);
     return _repo.GetItemsOfType(typeId, user);
   }
 
   [HttpGet("item/{itemId}")]
-  public ActionResult<Item?> GetItem(long itemId)
+  public async Task<ActionResult<Item?>> GetItem(long itemId)
   {
-    var user = _userRepo.GetByName(User.Identity.Name);
+    var user = await _userManager.GetUserAsync(User);
     return _repo.GetItem(itemId, user);
   }
 }

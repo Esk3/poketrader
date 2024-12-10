@@ -16,8 +16,10 @@ public class Program
     builder.Services.AddTransient<AppDbContext>(e => new AppDbContext(connectionString));
 
     builder.Services.AddIdentityCore<IdentityUser>().AddSignInManager();
+    builder.Services.AddIdentityCore<User.PokemonUser>();
 
     builder.Services.AddTransient<IUserStore<IdentityUser>, Data.UserStore>();
+    builder.Services.AddTransient<IUserStore<User.PokemonUser>, User.Repository>();
 
     builder.Services.AddAuthentication(options =>
     {

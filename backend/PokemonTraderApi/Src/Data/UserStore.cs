@@ -13,7 +13,8 @@ public class UserStore : IUserStore<IdentityUser>,
 /*IUserSecurityStampStore<IdentityUser>*/
 {
   private readonly AppDbContext _context;
-  private readonly Func<SqliteConnection> _conn;
+  public readonly Func<SqliteConnection> _conn;
+
   public UserStore(AppDbContext context)
   {
     _context = context;

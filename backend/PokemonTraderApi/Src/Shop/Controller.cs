@@ -8,9 +8,9 @@ namespace PokemonTraderApi.Shop.Controller;
 public class ShopController : Util.MyControllerBase
 {
   private readonly IRepository _repo;
-  private readonly UserManager<IdentityUser> _userManger;
+  private readonly UserManager<PokemonTraderApi.User.PokemonUser> _userManger;
 
-  public ShopController(IRepository repository, UserManager<IdentityUser> userManager)
+  public ShopController(IRepository repository, UserManager<PokemonTraderApi.User.PokemonUser> userManager)
   {
     _repo = repository;
     _userManger = userManager;
@@ -57,7 +57,7 @@ public class ShopController : Util.MyControllerBase
   public async Task<ActionResult<ShopItem?>> Buy(long pokemonId)
   {
     var user = await _userManger.GetUserAsync(User);
-    var item = await _repo.BuyItem(pokemonId, new PokemonTraderApi.User.PokemonUser(user));
+    var item = await _repo.BuyItem(pokemonId, user);
     return item;
   }
 
