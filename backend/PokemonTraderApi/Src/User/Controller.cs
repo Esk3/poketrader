@@ -18,11 +18,11 @@ public class UserController : Util.MyControllerBase
 
   [HttpGet]
   [Authorize]
-  public async Task<ActionResult<PokemonUser>> GetUserInfo()
+  public async Task<ActionResult<PublicPokemonUser>> GetUserInfo()
   {
     var user = await _userManager.GetUserAsync(User);
-    user.coins = _repo.GetCoins(user.pokemonUserId);
-    return user;
+
+    return new PublicPokemonUser { username = user.UserName, coins = user.coins };
   }
 
   [HttpGet("coins")]

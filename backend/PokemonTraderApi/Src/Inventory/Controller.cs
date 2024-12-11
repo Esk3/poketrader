@@ -27,6 +27,20 @@ public class InventoryController : MyControllerBase
     return _repo.GetAllItems(user);
   }
 
+  [HttpGet("info")]
+  public async Task<ActionResult<InventoryInfo>> GetInventoryInfo()
+  {
+    var user = await _userManager.GetUserAsync(User);
+    return _repo.GetInventoryInfo(user);
+  }
+
+  [HttpGet("info/grouped")]
+  public async Task<ActionResult<InventoryInfo>> GetGroupedInventoryInfo()
+  {
+    var user = await _userManager.GetUserAsync(User);
+    return _repo.GetGroupedInventoryInfo(user);
+  }
+
   [HttpGet("{typeId}")]
   public async Task<ActionResult<List<Item>>> GetItemsOfType(long typeId)
   {

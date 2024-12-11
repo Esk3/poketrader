@@ -8,6 +8,9 @@ public interface IRepository
   public void Setup();
   public bool Test();
   public List<Item> GetAllItems(User.PokemonUser user, SqliteTransaction? transaction = null);
+  public List<Item> GetGroupedItems(User.PokemonUser user);
+  public InventoryInfo GetInventoryInfo(User.PokemonUser user);
+  public InventoryInfo GetGroupedInventoryInfo(User.PokemonUser user);
   public List<Item> GetItemsOfType(long pokemonId, User.PokemonUser user, SqliteTransaction? transaction = null);
   public Item? GetItem(long itemId, User.PokemonUser user, SqliteTransaction? transaction = null);
   public long InsertItem(long pokemonId, User.PokemonUser user, SqliteTransaction? transaction = null);
@@ -16,11 +19,13 @@ public interface IRepository
 public class Repository : IRepository
 {
   private readonly AppDbContext _context;
+
   public Repository(AppDbContext context)
   {
     _context = context;
     Setup();
   }
+
   public void Setup()
   {
     _context.GetConnection().Open();
@@ -49,7 +54,6 @@ public class Repository : IRepository
           new { UserId = user.pokemonUserId },
           transaction)
       .ToList();
-    throw new NotImplementedException();
   }
 
   public List<Item> GetItemsOfType(long pokemonId, User.PokemonUser user, SqliteTransaction? transaction = null)
@@ -85,5 +89,38 @@ public class Repository : IRepository
         new { Id = inventoryId },
         transaction
         );
+  }
+
+  public InventoryInfo GetInventoryInfo(User.PokemonUser user)
+  {
+    var items = GetAllItems(user);
+    var pokemonIds = items.Select(item => item.PokemonId);
+    var pokemon = _context.GetConnection().Query<Pokemon.PokemonSprite>(
+        @"select * from pokemon
+        where pokemon_id in @pokemonIds",
+        new { pokemonIds }
+        ).ToList();
+    return new InventoryInfo(items, pokemon);
+  }
+
+  public InventoryInfo GetGroupedInventoryInfo(User.PokemonUser user)
+  {
+    var items = GetGroupedItems(user);
+    var pokemonIds = items.Select(item => item.PokemonId);
+    var pokemon = _context.GetConnection().Query<Pokemon.PokemonSprite>(
+        @"select * from pokemon
+        where pokemon_id in @pokemonIds",
+        new { pokemonIds }
+        ).ToList();
+    return new InventoryInfo(items, pokemon);
+  }
+
+  public List<Item> GetGroupedItems(User.PokemonUser user)
+  {
+    return _context.GetConnection()
+      .Query<Item>("select *, count(pokemon_id) as count from card_inventory where pokemon_user_id = @UserId group by (pokemon_id)",
+          new { UserId = user.pokemonUserId }
+          )
+      .ToList();
   }
 }

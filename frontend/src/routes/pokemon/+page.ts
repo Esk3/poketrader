@@ -1,10 +1,11 @@
-import { PokemonUrl } from "$lib";
+import { ApiUrl, PokemonUrl } from "$lib";
 import type { PageLoad } from "./$types";
 
 export const load: PageLoad = async ({ fetch }) => {
   try {
-    const res = await fetch(PokemonUrl + "/pokemon");
-    const data: PokemonQueryResult = await res.json();
+    const res = await fetch(ApiUrl + "Pokemon");
+    const data: [PokemonName] = await res.json();
+    console.log(data)
     return { pokemon: data }
   }
   catch (err) {
@@ -13,14 +14,15 @@ export const load: PageLoad = async ({ fetch }) => {
   return {}
 }
 
-export interface PokemonQueryResult {
-  count: number,
-  next: string | null,
-  previous: string | null,
-  results: [PokemonName]
-};
+//export interface PokemonQueryResult {
+//  count: number,
+//  next: string | null,
+//  previous: string | null,
+//  results: [PokemonName]
+//};
 
 export interface PokemonName {
+  pokemonId: number,
   name: string,
-  url: string
+  spriteUrl: string
 }

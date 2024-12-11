@@ -5,7 +5,7 @@
 </script>
 
 <ul>
-  {#each pokemon.results as p}
+  {#each pokemon as p}
     <li>
       <PokemonName pokemon={p} />
     </li>

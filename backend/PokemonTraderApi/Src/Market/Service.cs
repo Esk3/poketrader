@@ -12,6 +12,8 @@ public interface IRepository
   public List<Listing> GetAllOpenListings();
   public Listing? GetListing(long listingId);
   public List<Listing> GetUserListings(User.PokemonUser user);
+  public List<Bid> GetBidsOnListing(long ListingId);
+  public List<UserBids> GetGroupSortedBidsOnListing(long listingId);
   public long CreateListing(long inventoryItemId, User.PokemonUser user);
   public bool BidOnListing(long listingId, int amount, User.PokemonUser user);
   public void FinishListing(long listingId, User.PokemonUser user);
@@ -76,10 +78,10 @@ public class Repository : IRepository
     _userRepo.TryUpdateCoins(-amount, user.pokemonUserId);
     _context.GetConnection().Execute(
         @"insert into listing_bids
-        (listing_id, amount)
+        (listing_id, amount, pokemon_user_id)
         values
-        (@ListingId, @Amount)",
-        new { ListingId = listingId, Amount = amount }
+        (@ListingId, @Amount, @UserId)",
+        new { ListingId = listingId, Amount = amount, UserId = user.pokemonUserId }
         );
     return true;
   }
@@ -132,7 +134,7 @@ public class Repository : IRepository
 
   public Listing? GetListing(long listingId)
   {
-    return _context.GetConnection().QuerySingleOrDefault(
+    return _context.GetConnection().QuerySingleOrDefault<Listing>(
         @"select * from listings
         where listing_id = @ListingId",
         new { ListingId = listingId }
@@ -148,4 +150,17 @@ public class Repository : IRepository
         ).ToList();
   }
 
+  public List<Bid> GetBidsOnListing(long ListingId)
+  {
+    return _context.GetConnection().Query<Bid>(
+        @"select * from listing_bids
+          where listing_id = @ListingId",
+        new { ListingId }
+        ).ToList();
+  }
+
+  public List<UserBids> GetGroupSortedBidsOnListing(long listingId)
+  {
+    throw new NotImplementedException();
+  }
 }

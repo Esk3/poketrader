@@ -1,10 +1,8 @@
 <script lang="ts">
+  import PokemonSprite from "$lib/components/PokemonSprite.svelte";
+
   const { pokemon } = $props();
-  const spriteUrl = (id) =>
-    `https://raw.githubusercontent.com/PokeAPI/sprites/master/sprites/pokemon/${id}.png`;
-  const split = pokemon.url.split("/");
-  const id = split[split.length - 2];
 </script>
 
 <h2>{pokemon.name}</h2>
-<img src={spriteUrl(id)} />
+<PokemonSprite url={pokemon.spriteUrl} name={pokemon.name} />

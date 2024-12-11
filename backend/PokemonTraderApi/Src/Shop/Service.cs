@@ -81,8 +81,7 @@ public class Repository : IRepository
   public async Task<ShopItem?> GetItem(long itemId)
   {
     ShopItem? item = await _context.GetConnection().QuerySingleOrDefaultAsync<ShopItem>(
-        @"
-        select * from shop_items
+        @"select * from shop_items
         where pokemon_id = @Id
         ", new { Id = itemId }
         );

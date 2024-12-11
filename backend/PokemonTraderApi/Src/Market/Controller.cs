@@ -53,7 +53,7 @@ public class MarketController : Util.MyControllerBase
   [HttpGet("{listingId}/bids")]
   public ActionResult<List<Bid>> GetBidsOnListing(long listingId)
   {
-    throw new NotImplementedException();
+    return _repo.GetBidsOnListing(listingId);
   }
 
   [HttpPost("{listingId}/bid")]
