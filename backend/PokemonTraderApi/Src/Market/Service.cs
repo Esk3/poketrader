@@ -10,10 +10,18 @@ public interface IRepository
   public bool Test();
 
   public List<Listing> GetAllOpenListings();
+  public List<ListingInfo> GetOpenListingsInfo();
+
   public Listing? GetListing(long listingId);
+  public ListingInfo? GetListingInfo(long listingId);
+
   public List<Listing> GetUserListings(User.PokemonUser user);
+  public List<ListingInfo> GetUserListingsInfo(User.PokemonUser user);
+
   public List<Bid> GetBidsOnListing(long ListingId);
   public List<UserBids> GetGroupSortedBidsOnListing(long listingId);
+  public UserBids? GetMaxUserBidOnListing(long listingId);
+
   public long CreateListing(long inventoryItemId, User.PokemonUser user);
   public bool BidOnListing(long listingId, int amount, User.PokemonUser user);
   public void FinishListing(long listingId, User.PokemonUser user);
@@ -159,8 +167,60 @@ public class Repository : IRepository
         ).ToList();
   }
 
-  public List<UserBids> GetGroupSortedBidsOnListing(long listingId)
+  public List<UserBids> GetGroupSortedBidsOnListing(long ListingId)
   {
-    throw new NotImplementedException();
+    // TODO: list of inventory_id's & join on detailed inventory item
+    return _context.GetConnection().Query<UserBids>(
+        @"select bid_id, listing_id, pokemon_user_id, sum(amount) as amount from listing_bids
+        where listing_id = @ListingId
+        group by (pokemon_user_id)
+        order by amount desc",
+        new { ListingId }
+        ).ToList();
+  }
+
+  public List<ListingInfo> GetOpenListingsInfo()
+  {
+    return _context.GetConnection().Query<ListingInfo>(
+        @"select l.*, p.pokemon_id, p.name as pokemon_name, p.sprite_url from listings l
+        join card_inventory i on i.inventory_id = l.inventory_id
+        join pokemon p on p.pokemon_id = i.pokemon_id
+        where closed_timestamp is null"
+        ).ToList();
+  }
+
+  public ListingInfo? GetListingInfo(long ListingId)
+  {
+    return _context.GetConnection().QuerySingleOrDefault<ListingInfo>(
+        @"select l.*, p.pokemon_id, p.name as pokemon_name, p.sprite_url from listings l
+        join card_inventory i on i.inventory_id = l.inventory_id
+        join pokemon p on p.pokemon_id = i.pokemon_id
+        where listing_id = @listingId",
+        new { ListingId }
+        );
+  }
+
+  public List<ListingInfo> GetUserListingsInfo(User.PokemonUser user)
+  {
+    return _context.GetConnection().Query<ListingInfo>(
+        @"select l.*, p.pokemon_id, p.name as pokemon_name, p.sprite_url from listings l
+        join card_inventory i on i.inventory_id = l.inventory_id
+        join pokemon p on p.pokemon_id = i.pokemon_id
+        where pokemon_user_id = @UserId",
+        new { UserId = user.pokemonUserId }
+        ).ToList();
+  }
+
+  public UserBids? GetMaxUserBidOnListing(long ListingId)
+  {
+    // TODO: list of inventory_id's & join on detailed inventory item
+    return _context.GetConnection().QuerySingleOrDefault<UserBids>(
+        @"select bid_id, listing_id, pokemon_user_id, sum(amount) as amount from listing_bids
+        where listing_id = @ListingId
+        group by (pokemon_user_id)
+        order by amount desc
+        limit 1",
+        new { ListingId }
+        );
   }
 }

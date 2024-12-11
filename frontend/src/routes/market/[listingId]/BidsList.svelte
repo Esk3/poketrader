@@ -4,6 +4,7 @@
 
 {#each bids as bid}
   <li>
-    <p>{bid.amount}</p>
+    <p>User: {bid.pokemonUserId}</p>
+    <p>amount: {bid.amount}</p>
   </li>
 {/each}

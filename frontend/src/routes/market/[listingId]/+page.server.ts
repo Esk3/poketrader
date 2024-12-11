@@ -2,7 +2,7 @@ import type { Actions, PageServerLoad } from "./$types";
 
 export const load: PageServerLoad = async ({ params, fetch }) => {
   const listingId = params.listingId;
-  const res = await fetch("/API/Market/" + listingId + "/bids");
+  const res = await fetch("/API/Market/" + listingId + "/bids/info");
   const bids = await res.json();
   console.log(bids);
   return {

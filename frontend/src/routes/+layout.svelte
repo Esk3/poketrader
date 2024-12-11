@@ -12,11 +12,11 @@ console.log(data.user);
   </li>
 {/each}
 <li class="split"></li>
-<li>Coins: {data.user.coins}</li>
 {#if !data.user}
 <li><a href="/register">Register</a></li>
 <li><a href="/login">Login</a></li>
 {:else}
+<li>Coins: {data.user.coins}</li>
 <li>Logged in as: {data.user.username}</li>
 <li><a href="/logout">Logout</a></li>
 {/if}

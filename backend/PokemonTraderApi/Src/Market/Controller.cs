@@ -26,6 +26,12 @@ public class MarketController : Util.MyControllerBase
     return _repo.GetAllOpenListings();
   }
 
+  [HttpGet("info")]
+  public ActionResult<List<ListingInfo>> GetOpenListingsInfo()
+  {
+    return _repo.GetOpenListingsInfo();
+  }
+
   [HttpGet("{listingId}")]
   public ActionResult<Listing?> GetListing(long listingId)
   {
@@ -54,6 +60,18 @@ public class MarketController : Util.MyControllerBase
   public ActionResult<List<Bid>> GetBidsOnListing(long listingId)
   {
     return _repo.GetBidsOnListing(listingId);
+  }
+
+  [HttpGet("{listingId}/bids/info")]
+  public ActionResult<List<UserBids>> GetUserBidsOnListing(long listingId)
+  {
+    return _repo.GetGroupSortedBidsOnListing(listingId);
+  }
+
+  [HttpGet("{listingId}/bids/info/max")]
+  public ActionResult<UserBids?> GetMaxUserBidsOnListing(long listingId)
+  {
+    return _repo.GetMaxUserBidOnListing(listingId);
   }
 
   [HttpPost("{listingId}/bid")]
