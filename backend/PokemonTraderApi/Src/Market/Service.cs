@@ -27,6 +27,8 @@ public interface IRepository
   public bool BidPokemonOnListing(long listingId, long inventoryId, User.PokemonUser user);
   public void FinishListing(long listingId, User.PokemonUser user);
   public void CancelListing(long listingId, User.PokemonUser user);
+
+  public ListingView GetListingView();
 }
 
 public class Repository : IRepository
@@ -246,5 +248,12 @@ public class Repository : IRepository
         limit 1",
         new { ListingId }
         );
+  }
+
+  public ListingView GetListingView()
+  {
+    var listing = GetListing(1);
+    var username = "xyz";
+    throw new NotImplementedException();
   }
 }

@@ -184,7 +184,7 @@ public class Repository : IRepository, IUserStore<PokemonUser>, IDisposable
         from pokemon_users pu 
         join auth_users au 
         on au.auth_user_id = pu.auth_user_id
-        where au.username = @Username
+        where au.username like @Username
         ",
         new { Username = normalizedUserName }
         );

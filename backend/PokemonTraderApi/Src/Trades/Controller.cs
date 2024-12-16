@@ -1,6 +1,7 @@
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.AspNetCore.Identity;
+using System.Diagnostics;
 
 namespace PokemonTraderApi.Trades.Controller;
 
@@ -23,6 +24,7 @@ public class TradesController : Util.MyControllerBase
     var user = await _userManger.GetUserAsync(User);
     return _repo.GetTrades(user);
   }
+
   [HttpGet("{tradeId}")]
   public async Task<Trade?> GetTrade(long tradeId)
   {
@@ -31,10 +33,12 @@ public class TradesController : Util.MyControllerBase
   }
 
   [HttpPost("create")]
-  public async Task<Trade> CreateTrade(string otherUsername)
+  public async Task<Trade> CreateTrade(Forms.CreateForm otherUsername)
   {
     var user = await _userManger.GetUserAsync(User);
-    var other = await _userManger.FindByNameAsync(otherUsername);
+    var other = await _userManger.FindByNameAsync(otherUsername.otherUsername);
+    Debug.Assert(user is not null, "user is null");
+    Debug.Assert(other is not null, "other user is null");
     return _repo.CreateTrade(user, other);
   }
 

@@ -26,6 +26,28 @@ public class MarketController : Util.MyControllerBase
     return _repo.GetAllOpenListings();
   }
 
+  [HttpGet("view")]
+  public async Task<ActionResult<ListingView>> GetListingView(long listingId)
+  {
+    var listing = _repo.GetListing(listingId);
+    var listingUser = await _userManager.FindByIdAsync(listing.pokemonUserId.ToString());
+    var itemViewUrl = "/API/Inventory/item/" + listing.inventoryId;
+    var bids = _repo.GetGroupSortedBidsOnListing(listingId);
+    var maxBid = bids.FirstOrDefault();
+    int maxBidValue = 0;
+    if (maxBid is not null) { maxBidValue = maxBid.totalValue; }
+    return new ListingView
+    {
+      listingId = listingId,
+      username = listingUser.UserName,
+      itemViewUrl = itemViewUrl,
+      createTimestamp = listing.createTimestamp,
+      closedTimestamp = listing.closedTimestamp,
+      cancled = listing.cancled,
+      maxBidValue = maxBidValue
+    };
+  }
+
   [HttpGet("info")]
   public ActionResult<List<ListingInfo>> GetOpenListingsInfo()
   {

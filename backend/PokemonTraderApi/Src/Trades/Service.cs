@@ -31,6 +31,7 @@ public class Repository : IRepository
 {
   private readonly AppDbContext _context;
   private readonly TransferRecord.IRepository _transferRecord;
+
   public Repository(AppDbContext context, TransferRecord.IRepository transferRecordRepository)
   {
     _context = context;
@@ -144,11 +145,8 @@ public class Repository : IRepository
         "select * from card_trades_offers where trade_id = @TradeId order by timestamp desc limit 2",
         new { TradeId }
         ).ToList();
-    Console.WriteLine(last2);
     if (last2.All(offer =>
     {
-      Console.WriteLine(offer.type);
-      Console.WriteLine(offer);
       return offer.type == Type.Lockin;
     }))
     {
