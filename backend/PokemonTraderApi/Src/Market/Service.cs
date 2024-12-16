@@ -24,6 +24,7 @@ public interface IRepository
 
   public long CreateListing(long inventoryItemId, User.PokemonUser user);
   public bool BidOnListing(long listingId, int amount, User.PokemonUser user);
+  public bool BidPokemonOnListing(long listingId, long inventoryId, User.PokemonUser user);
   public void FinishListing(long listingId, User.PokemonUser user);
   public void CancelListing(long listingId, User.PokemonUser user);
 }
@@ -91,6 +92,25 @@ public class Repository : IRepository
         (@ListingId, @Amount, @UserId)",
         new { ListingId = listingId, Amount = amount, UserId = user.pokemonUserId }
         );
+    return true;
+  }
+
+  public bool BidPokemonOnListing(long ListingId, long InventoryId, User.PokemonUser user)
+  {
+    var item = _inventoryRepo.GetItem(InventoryId, user);
+    if (item is null)
+    {
+      return false;
+    }
+
+    var rowsInserted = _context.GetConnection().Execute(
+        @"insert into listing_bids
+        (listing_id, inventory_id, pokemon_user_id)
+        values
+        (@ListingId, @InventoryId, @UserId)",
+        new { ListingId, InventoryId, UserId = user.pokemonUserId }
+        );
+    Debug.Assert(rowsInserted == 1);
     return true;
   }
 
@@ -170,13 +190,17 @@ public class Repository : IRepository
   public List<UserBids> GetGroupSortedBidsOnListing(long ListingId)
   {
     // TODO: list of inventory_id's & join on detailed inventory item
-    return _context.GetConnection().Query<UserBids>(
-        @"select bid_id, listing_id, pokemon_user_id, sum(amount) as amount from listing_bids
+    var result = _context.GetConnection().Query<RawUserBids>(
+        @"select bid_id, listing_id, pokemon_user_id, sum(amount) as amount, group_concat(inventory_id) as inventory_ids from listing_bids
         where listing_id = @ListingId
         group by (pokemon_user_id)
         order by amount desc",
         new { ListingId }
-        ).ToList();
+        );
+    return result.Select(row =>
+    {
+      return new UserBids(row);
+    }).ToList();
   }
 
   public List<ListingInfo> GetOpenListingsInfo()

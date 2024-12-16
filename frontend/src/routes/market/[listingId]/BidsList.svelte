@@ -1,10 +1,10 @@
 <script lang="ts">
+  import Bid from "./Bid.svelte";
   const { bids } = $props();
 </script>
 
 {#each bids as bid}
   <li>
-    <p>User: {bid.pokemonUserId}</p>
-    <p>amount: {bid.amount}</p>
+    <Bid {bid} />
   </li>
 {/each}

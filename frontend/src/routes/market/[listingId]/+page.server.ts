@@ -4,10 +4,12 @@ export const load: PageServerLoad = async ({ params, fetch }) => {
   const listingId = params.listingId;
   const res = await fetch("/API/Market/" + listingId + "/bids/info");
   const bids = await res.json();
-  console.log(bids);
+  const inventoryRes = await fetch("/API/Inventory/info/grouped");
+  const inventory = await inventoryRes.json();
   return {
     listingId,
-    bids
+    bids,
+    inventory
   }
 }
 

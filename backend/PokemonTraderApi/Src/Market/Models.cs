@@ -32,6 +32,16 @@ public class Bid
   public int inventoryId { get; set; }
 }
 
+public class RawUserBids
+{
+  public int bidId { get; set; }
+  public int listingId { get; set; }
+  public int pokemonUserId { get; set; }
+  public int amount { get; set; }
+  public int totalValue { get; set; }
+  public string? inventoryIds { get; set; }
+}
+
 public class UserBids
 {
   public int bidId { get; set; }
@@ -39,5 +49,23 @@ public class UserBids
   public int pokemonUserId { get; set; }
   public int amount { get; set; }
   public int totalValue { get; set; }
-  public List<Inventory.InventoryInfo>? inventoryInfo { get; set; }
+  public List<int> inventoryIds { get; set; }
+
+  public UserBids(RawUserBids bid)
+  {
+    bidId = bid.bidId;
+    listingId = bid.listingId;
+    pokemonUserId = bid.pokemonUserId;
+    amount = bid.amount;
+    totalValue = bid.totalValue;
+    if (bid.inventoryIds is not null)
+    {
+      inventoryIds = bid.inventoryIds.Split(",").Select(s => int.Parse(s)).ToList();
+    }
+    else
+    {
+      inventoryIds = new List<int>();
+    }
+
+  }
 }

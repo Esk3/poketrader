@@ -6,7 +6,7 @@ public interface IRepository
 {
   public void Setup();
   public bool Test();
-  public long RecordTransfer(long? reciverId, long? senderId, int amount);
+  public long RecordTransfer(long? reciverId, long? senderId, int? amount, long? itemId);
 }
 
 public class Repository : IRepository
@@ -18,13 +18,16 @@ public class Repository : IRepository
     _context = databaseContext;
   }
 
-  public long RecordTransfer(long? reciverId, long? senderId, int amount)
+  public long RecordTransfer(long? reciverId, long? senderId, int? amount, long? ItemId)
   {
-    Debug.Assert(amount > 0);
+    Debug.Assert(amount is not null || ItemId is not null);
+    Debug.Assert(!(amount is not null && ItemId is not null));
+    Debug.Assert(amount > 0 || amount is null);
+    Debug.Assert(ItemId > 0);
     return _context.GetConnection().QuerySingle(
-        @"insert into transfers (reciver_pokemn_user_id, sender_pokemon_user_id, amount) values (@Reciver, @Sender, @Amount);
+        @"insert into transfers (reciver_pokemon_user_id, sender_pokemon_user_id, amount, item_id) values (@Reciver, @Sender, @Amount, @ItemId);
         select cast(last_insert_rowid() as int) as id",
-        new { Reciver = reciverId, Sender = senderId, Amount = amount }
+        new { Reciver = reciverId, Sender = senderId, Amount = amount, ItemId }
         ).id;
   }
 

@@ -15,6 +15,7 @@ namespace Microsoft.Extensions.DependencyInjection
       services.AddTransient<PokemonTraderApi.Inventory.IRepository, PokemonTraderApi.Inventory.Repository>();
       services.AddTransient<PokemonTraderApi.Pokemon.IRepository, PokemonTraderApi.Pokemon.Repository>();
       services.AddTransient<PokemonTraderApi.Profile.IRepository, PokemonTraderApi.Profile.Repository>();
+      services.AddTransient<PokemonTraderApi.Trades.IRepository, PokemonTraderApi.Trades.Repository>();
 
       return services;
     }
@@ -32,6 +33,7 @@ namespace Microsoft.Extensions.DependencyInjection
         Debug.Assert(services.GetRequiredService<PokemonTraderApi.Pokemon.IRepository>().Test(), "Pokemon repository test failed");
         Debug.Assert(services.GetRequiredService<PokemonTraderApi.Profile.IRepository>().Test(), "Profile repository test failed");
         Debug.Assert(services.GetRequiredService<PokemonTraderApi.TransferRecord.IRepository>().Test(), "Transfer Record repository test failed");
+        Debug.Assert(services.GetRequiredService<PokemonTraderApi.Trades.IRepository>().Test(), "Trades repository test failed");
       }
       return app;
     }
@@ -49,6 +51,7 @@ namespace Microsoft.Extensions.DependencyInjection
         services.GetRequiredService<PokemonTraderApi.Shop.IRepository>().Setup();
         services.GetRequiredService<PokemonTraderApi.Market.IRepository>().Setup();
         services.GetRequiredService<PokemonTraderApi.Inventory.IRepository>().Setup();
+        services.GetRequiredService<PokemonTraderApi.Trades.IRepository>().Setup();
       }
       return app;
     }

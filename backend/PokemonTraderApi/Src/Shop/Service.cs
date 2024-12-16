@@ -10,7 +10,7 @@ public interface IRepository
   public bool Test();
   public List<ShopItem> GetItems();
   public List<ShopPokemon> GetPokemon();
-  public ShopPokemon? GetPokemonById(long pokemonId);
+  public Task<ShopPokemon?> GetPokemonById(long pokemonId);
   public ShopPokemon? GetPokemonByName(string name);
   public Task<ShopItem?> GetItem(long itemId);
   public Task<ShopItem?> BuyItem(long itemId, User.PokemonUser user, SqliteTransaction? transaction = null);
@@ -73,7 +73,7 @@ public class Repository : IRepository
     var coinsRemaining = _usersRepo.TryUpdateCoins(-item.cost, user.pokemonUserId);
     if (coinsRemaining == -1) return null;
     _inventoryRepo.InsertItem(itemId, user, transaction);
-    _transferRepo.RecordTransfer(null, user.pokemonUserId, item.cost);
+    _transferRepo.RecordTransfer(null, user.pokemonUserId, item.cost, null);
     if (commit) { transaction.Commit(); }
     return null;
   }
@@ -103,7 +103,7 @@ public class Repository : IRepository
         select cast(last_insert_rowid() as int) as id",
         new { Id = pokemon.pokemonId, Cost }
         );
-    return await _context.GetConnection().QuerySingleAsync(
+    return await _context.GetConnection().QuerySingleAsync<ShopItem>(
         @"select * from shop_items
         where pokemon_id = @Id",
         new { Id = result.id }
@@ -126,7 +126,7 @@ public class Repository : IRepository
     _inventoryRepo.DeleteItem(inventoryItemId, user, transaction);
     var item = await GetItem(inventoryItem.PokemonId);
     _usersRepo.UpdateCoins(item.cost, user.pokemonUserId);
-    _transferRepo.RecordTransfer(user.pokemonUserId, null, item.cost);
+    _transferRepo.RecordTransfer(user.pokemonUserId, null, item.cost, null);
     return null;
   }
 
@@ -138,14 +138,28 @@ public class Repository : IRepository
         ).ToList();
   }
 
-  public ShopPokemon? GetPokemonById(long pokemonId)
+  public async Task<ShopPokemon?> GetPokemonById(long pokemonId)
   {
-    return _context.GetConnection().QuerySingleOrDefault<ShopPokemon>(
-        @"select * from shop_items si 
+    var query = (long Id) =>
+    {
+      return _context.GetConnection().QuerySingleOrDefault<ShopPokemon>(
+          @"select * from shop_items si 
           join pokemon p on p.pokemon_id = si.pokemon_id
           where p.pokemon_id = @Id",
-          new { Id = pokemonId }
-        );
+            new { Id }
+          );
+    };
+    var pokemon = query(pokemonId);
+    ShopItem? item;
+    if (pokemon is null)
+    {
+      item = await Insert(pokemonId);
+      if (item is not null)
+      {
+        pokemon = query(item.pokemonId);
+      }
+    }
+    return pokemon;
   }
 
   public ShopPokemon? GetPokemonByName(string name)

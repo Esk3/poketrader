@@ -49,9 +49,10 @@ public class InventoryController : MyControllerBase
   }
 
   [HttpGet("item/{itemId}")]
+  [AllowAnonymous]
   public async Task<ActionResult<Item?>> GetItem(long itemId)
   {
-    var user = await _userManager.GetUserAsync(User);
-    return _repo.GetItem(itemId, user);
+    /*var user = await _userManager.GetUserAsync(User);*/
+    return _repo.GetPublicItem(itemId);
   }
 }

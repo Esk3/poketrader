@@ -12,6 +12,7 @@ export const load = async ({ fetch, cookies }: any) => {
     { name: "Shop", href: "/shop" },
     { name: "Market", href: "/market" },
     { name: "Inventory", href: "/inventory" },
+    { name: "Trades", href: "/trades" }
   ];
   return { user, pages };
 }

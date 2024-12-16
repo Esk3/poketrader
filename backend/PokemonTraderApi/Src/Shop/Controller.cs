@@ -29,9 +29,9 @@ public class ShopController : Util.MyControllerBase
   }
 
   [HttpGet("pokemon/id/{pokemonId}")]
-  public ActionResult<ShopPokemon?> GetPokemonById(long pokemonId)
+  public async Task<ActionResult<ShopPokemon?>> GetPokemonById(long pokemonId)
   {
-    return _repo.GetPokemonById(pokemonId);
+    return await _repo.GetPokemonById(pokemonId);
   }
 
   [HttpGet("pokemon/name/{name}")]

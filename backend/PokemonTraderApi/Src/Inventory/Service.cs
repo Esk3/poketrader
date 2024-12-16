@@ -7,15 +7,21 @@ public interface IRepository
 {
   public void Setup();
   public bool Test();
+
   public List<Item> GetAllItems(User.PokemonUser user, SqliteTransaction? transaction = null);
   public List<Item> GetGroupedItems(User.PokemonUser user);
+
   public InventoryInfo GetInventoryInfo(User.PokemonUser user);
   public InventoryInfo GetGroupedInventoryInfo(User.PokemonUser user);
+
   public List<Item> GetItemsOfType(long pokemonId, User.PokemonUser user, SqliteTransaction? transaction = null);
   public Item? GetItem(long itemId, User.PokemonUser user, SqliteTransaction? transaction = null);
+  public Item? GetPublicItem(long itemId);
+
   public long InsertItem(long pokemonId, User.PokemonUser user, SqliteTransaction? transaction = null);
   public void DeleteItem(long inventoryId, User.PokemonUser user, SqliteTransaction? transaction = null);
 }
+
 public class Repository : IRepository
 {
   private readonly AppDbContext _context;
@@ -45,6 +51,13 @@ public class Repository : IRepository
       .QuerySingleOrDefault<Item>("select * from card_inventory where inventory_id = @ItemId and pokemon_user_id = @UserId",
           new { ItemId = itemId, UserId = user.pokemonUserId },
           transaction);
+  }
+
+  public Item? GetPublicItem(long itemId)
+  {
+    return _context.GetConnection()
+      .QuerySingleOrDefault<Item>("select * from card_inventory where inventory_id = @ItemId",
+          new { ItemId = itemId });
   }
 
   public List<Item> GetAllItems(User.PokemonUser user, SqliteTransaction? transaction = null)

@@ -1,5 +1,7 @@
 <script lang="ts">
+  import { ApiUrl } from "$lib";
   import PokemonSprite from "$lib/components/PokemonSprite.svelte";
+  import { onMount } from "svelte";
   import ListingCardList from "./ListingCardList.svelte";
 
   const { listing }: { listing: Listing } = $props();
@@ -14,6 +16,15 @@
     closedTimestamp: string;
     cancled: boolean;
   }
+
+  let maxBid = $state(null);
+  onMount(async () => {
+    const res = await fetch(
+      ApiUrl + "Market/" + listing.listingId + "/bids/info/max",
+    );
+    const data = await res.json();
+    maxBid = data.amount;
+  });
 </script>
 
 <div class="listing">
@@ -21,6 +32,6 @@
     {listing.pokemonName}
     <PokemonSprite url={listing.spriteUrl} name={listing.pokemonName} />
     <p>Created at: {listing.createTimestamp}</p>
-    <p>Max bid value: todo</p>
+    <p>Max bid value: {maxBid}</p>
   </a>
 </div>

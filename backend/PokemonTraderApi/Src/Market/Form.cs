@@ -7,5 +7,6 @@ public class CreateListing
 
 public class BidForm
 {
-  public int amount { get; set; }
+  public int? amount { get; set; }
+  public long? inventoryId { get; set; }
 }

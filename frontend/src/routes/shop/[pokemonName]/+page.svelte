@@ -10,4 +10,3 @@
     value="Buy {data.pokemon.name} for {data.pokemon.cost}"
   />
 </form>
-maybe a way to buy multiple

@@ -79,7 +79,14 @@ public class MarketController : Util.MyControllerBase
   public async void BidOnListing(Form.BidForm bid, long listingId)
   {
     var user = await _userManager.GetUserAsync(User);
-    Debug.Assert(_repo.BidOnListing(listingId, bid.amount, user));
+    if (bid.inventoryId is not null)
+    {
+      Debug.Assert(_repo.BidPokemonOnListing(listingId, (long)bid.inventoryId, user));
+    }
+    else if (bid.amount is not null)
+    {
+      Debug.Assert(_repo.BidOnListing(listingId, (int)bid.amount, user));
+    }
   }
 
   [HttpPost("{listingId}/finish")]
