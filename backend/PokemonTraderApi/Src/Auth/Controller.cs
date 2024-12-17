@@ -10,6 +10,7 @@ public class AuthController : MyControllerBase
 {
   private readonly UserManager<IdentityUser> _userManager;
   private readonly SignInManager<IdentityUser> _signinManager;
+
   public AuthController(UserManager<IdentityUser> userManager, SignInManager<IdentityUser> signInManager)
   {
     _userManager = userManager;

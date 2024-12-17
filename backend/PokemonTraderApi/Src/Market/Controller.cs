@@ -10,20 +10,31 @@ public class MarketController : Util.MyControllerBase
 {
   private readonly IRepository _repo;
   private readonly UserManager<PokemonTraderApi.User.PokemonUser> _userManager;
+  private readonly LinkGenerator _linkGenerator;
 
   public MarketController(
       IRepository repository,
-      UserManager<PokemonTraderApi.User.PokemonUser> userManager
+      UserManager<PokemonTraderApi.User.PokemonUser> userManager,
+      LinkGenerator linkGenerator
       )
   {
     _repo = repository;
     _userManager = userManager;
+    _linkGenerator = linkGenerator;
   }
 
   [HttpGet]
-  public ActionResult<List<Listing>> GetAllOpenListings()
+  public ActionResult<List<string>> GetAllOpenListings()
   {
-    return _repo.GetAllOpenListings();
+    var listings = _repo.GetAllOpenListings();
+    var urls = listings.Select(listing => _linkGenerator.GetUriByAction(
+          HttpContext,
+          nameof(GetListingView),
+          "market",
+          new { listingId = listing.listingId }
+          ) ?? throw new InvalidOperationException("unable to generate URL")
+        ).ToList();
+    return urls;
   }
 
   [HttpGet("{listingId}/view")]
@@ -51,7 +62,7 @@ public class MarketController : Util.MyControllerBase
 
   string url(string id) => "/API/Inventory/item/" + id + "/view";
 
-  [HttpGet("{listingId}/bids/view")]
+  [HttpGet("{listingId}/bids")]
   public async Task<ActionResult<List<UserBidsView>>> GetBidsView(long listingId)
   {
     var queryBids = _repo.GetUserBidsOnListing(listingId);
@@ -69,27 +80,6 @@ public class MarketController : Util.MyControllerBase
     return bids;
   }
 
-  [HttpGet("info")]
-  public ActionResult<List<ListingInfo>> GetOpenListingsInfo()
-  {
-    return _repo.GetOpenListingsInfo();
-  }
-
-  [HttpGet("{listingId}")]
-  public ActionResult<Listing?> GetListing(long listingId)
-  {
-    return _repo.GetListing(listingId);
-  }
-
-  [HttpGet("user")]
-  [Authorize]
-  public async Task<ActionResult<List<Listing>>> GetUserListings()
-  {
-    var user = await _userManager.GetUserAsync(User);
-    Debug.Assert(user is not null);
-    return _repo.GetUserListings(user);
-  }
-
   [HttpPost("new")]
   [Authorize]
   public async Task<ActionResult<long>> CreateListing(Form.CreateListing form)
@@ -97,12 +87,6 @@ public class MarketController : Util.MyControllerBase
     var user = await _userManager.GetUserAsync(User);
     Debug.Assert(user is not null);
     return _repo.CreateListing(form.inventoryId, user);
-  }
-
-  [HttpGet("{listingId}/bids")]
-  public ActionResult<List<Bid>> GetBidsOnListing(long listingId)
-  {
-    return _repo.GetBidsOnListing(listingId);
   }
 
   [HttpPost("{listingId}/bid")]
@@ -129,4 +113,7 @@ public class MarketController : Util.MyControllerBase
     var user = await _userManager.GetUserAsync(User);
     _repo.CancelListing(listingId, user);
   }
+
+  // TODO: get listings made by user
+  // TODO: get listings bid on by user
 }

@@ -9,48 +9,46 @@ public class ShopController : Util.MyControllerBase
 {
   private readonly IRepository _repo;
   private readonly UserManager<PokemonTraderApi.User.PokemonUser> _userManger;
+  private readonly LinkGenerator _linkGenerator;
 
-  public ShopController(IRepository repository, UserManager<PokemonTraderApi.User.PokemonUser> userManager)
+  public ShopController(
+      IRepository repository,
+      UserManager<PokemonTraderApi.User.PokemonUser> userManager,
+      LinkGenerator linkGenerator
+      )
   {
     _repo = repository;
     _userManger = userManager;
+    _linkGenerator = linkGenerator;
   }
 
   [HttpGet]
   public ActionResult<List<ShopItem>> GetAll()
   {
-    return _repo.GetItems();
+    var items = _repo.GetItems();
+    items.ForEach(item =>
+    {
+      item.pokemonUrl = _linkGenerator.GetUriByAction(
+          HttpContext,
+          nameof(Pokemon.Controller.PokemonController.GetById),
+          "pokemon",
+          new { pokemonId = item.pokemonId }
+          ) ?? throw new InvalidOperationException("unable to generate URL");
+    });
+    return items;
   }
 
-  [HttpGet("pokemon")]
-  public ActionResult<List<ShopPokemon>> GetPokemon()
-  {
-    return _repo.GetPokemon();
-  }
-
-  [HttpGet("pokemon/id/{pokemonId}")]
-  public async Task<ActionResult<ShopPokemon?>> GetPokemonById(long pokemonId)
-  {
-    return await _repo.GetPokemonById(pokemonId);
-  }
-
-  [HttpGet("pokemon/name/{name}")]
-  public ActionResult<ShopPokemon?> GetPokemonByName(string name)
-  {
-    return _repo.GetPokemonByName(name);
-  }
-
-  [HttpGet("{pokemonId}")]
-  public async Task<ActionResult<ShopItem?>> GetById(long pokemonId)
-  {
-    return await _repo.GetItem(pokemonId);
-  }
-
-  [HttpGet("{name}")]
-  public ShopItem? GetByName(string name)
-  {
-    return null;
-  }
+  /*[HttpGet("{pokemonId}")]*/
+  /*public async Task<ActionResult<ShopItem?>> GetById(long pokemonId)*/
+  /*{*/
+  /*  return await _repo.GetItem(pokemonId);*/
+  /*}*/
+  /**/
+  /*[HttpGet("{name}")]*/
+  /*public ShopItem? GetByName(string name)*/
+  /*{*/
+  /*  return null;*/
+  /*}*/
 
   [HttpPost("{pokemonId}/buy")]
   [Authorize]

@@ -10,13 +10,6 @@ public class Trade
   public bool cancled { get; set; }
 }
 
-public class TradeDetailsView
-{
-  public Trade? trade { get; set; }
-  public List<int>? user1ItemsInventoryIds { get; set; }
-  public List<int>? user2ItemsInventoryIds { get; set; }
-}
-
 public class TradeOffers
 {
   public Trade trade { get; set; }
@@ -30,11 +23,11 @@ public class TradeOffers
 
 public class Offer
 {
-  public int offerId { get; set; }
-  public int tradeId { get; set; }
-  public int pokemonUserId { get; set; }
+  public long offerId { get; set; }
+  public long tradeId { get; set; }
+  public long pokemonUserId { get; set; }
   public required Type type { get; set; }
-  public int inventoryId { get; set; }
+  public long inventoryId { get; set; }
   public required string timestamp { get; set; }
 }
 
@@ -43,4 +36,11 @@ public enum Type
   Add,
   Remove,
   Lockin,
+}
+
+public class TradeInventoryIds
+{
+  public Trade? trade;
+  public List<long>? user1;
+  public List<long>? user2;
 }

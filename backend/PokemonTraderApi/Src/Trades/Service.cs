@@ -14,6 +14,9 @@ public interface IRepository
   public List<Trade> GetTrades(User.PokemonUser user);
   public List<Trade> GetAllTrades(User.PokemonUser user);
 
+  public List<TradeView> GetOpenTradeViews(User.PokemonUser user);
+  public TradeView GetTradeView(long tradeId, User.PokemonUser user);
+
   public Trade? GetTrade(long tradeId, User.PokemonUser user);
 
   public Trade CreateTrade(User.PokemonUser user, User.PokemonUser other);
@@ -25,7 +28,7 @@ public interface IRepository
   public List<Offer> GetOffers(long tradeId, User.PokemonUser user);
   public TradeOffers GetTradeOffers(long tradeId, User.PokemonUser user);
 
-  public TradeDetailsView? GetTradeDetailsView(long tradeId, User.PokemonUser user);
+  public TradeInventoryIds? GetTradeDetailsView(long tradeId, User.PokemonUser user);
 
 }
 
@@ -233,13 +236,13 @@ public class Repository : IRepository
     return new TradeOffers(trade, offers);
   }
 
-  public TradeDetailsView? GetTradeDetailsView(long tradeId, User.PokemonUser user)
+  public TradeInventoryIds? GetTradeDetailsView(long tradeId, User.PokemonUser user)
   {
     var trade = GetTrade(tradeId, user);
     var allOffers = GetOffers(tradeId, user);
     var user1 = GetItemsInOffer(allOffers.Where(offer => offer.pokemonUserId == user.pokemonUserId));
     var user2 = GetItemsInOffer(allOffers.Where(offer => offer.pokemonUserId != user.pokemonUserId));
-    return new TradeDetailsView { trade = trade, user1ItemsInventoryIds = user1, user2ItemsInventoryIds = user2 };
+    return new TradeInventoryIds { trade = trade, user1 = user1, user2 = user2 };
   }
 
   (List<Offer>, List<Offer>) SplitItemsInOffer(List<Offer> offers, User.PokemonUser user)
@@ -249,9 +252,9 @@ public class Repository : IRepository
     return (thisUser, otherUser);
   }
 
-  List<int> GetItemsInOffer(IEnumerable<Offer> offers)
+  List<long> GetItemsInOffer(IEnumerable<Offer> offers)
   {
-    var result = new List<int>();
+    var result = new List<long>();
     foreach (var offer in offers)
     {
       if (offer.type == Type.Add)
@@ -268,6 +271,28 @@ public class Repository : IRepository
   }
 
   public List<Trade> GetAllTrades(User.PokemonUser user)
+  {
+    throw new NotImplementedException();
+  }
+
+  public List<TradeView> GetOpenTradeViews(User.PokemonUser user)
+  {
+    return _context.GetConnection().Query<TradeView>(
+        @"select 
+          t.trade_id as id,
+          u1.username as username1,
+          u2.username as username2,
+          t.start_timestamp,
+          t.end_timestamp,
+          t.cancled
+        from card_trades t
+        join auth_users u1 on u1.auth_user_id = t.pokemon_user_id_1
+        join auth_users u2 on u2.auth_user_id = t.pokemon_user_id_2
+        where t.end_timestamp is null"
+        ).ToList();
+  }
+
+  public TradeView GetTradeView(long tradeId, User.PokemonUser user)
   {
     throw new NotImplementedException();
   }

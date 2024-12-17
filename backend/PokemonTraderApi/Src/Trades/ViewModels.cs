@@ -1,4 +1,4 @@
-namespace PokemonTraderApi.Trades.ViewModels;
+namespace PokemonTraderApi.Trades;
 
 public class TradesView
 {
@@ -10,7 +10,7 @@ public class TradesView
 
 public class TradeView
 {
-  public int tradeId { get; set; }
+  public int id { get; set; }
   public string? username1 { get; set; }
   public string? username2 { get; set; }
   public string startTimestamp { get; set; }
@@ -18,16 +18,6 @@ public class TradeView
   public bool cancled { get; set; }
   public string? details { get; set; }
 
-  public TradeView(Trade trade, string user1, string user2)
-  {
-    tradeId = trade.tradeId;
-    username1 = user1;
-    username2 = username2;
-    startTimestamp = trade.startTimestamp;
-    endTimestamp = trade.endTimestamp;
-    cancled = trade.cancled;
-    details = "";
-  }
 }
 
 public class TradeDetailsView

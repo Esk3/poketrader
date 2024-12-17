@@ -11,18 +11,22 @@ public class TradesController : Util.MyControllerBase
 {
   private readonly IRepository _repo;
   private readonly UserManager<PokemonTraderApi.User.PokemonUser> _userManger;
+  private readonly LinkGenerator _linkGenerator;
 
-  public TradesController(IRepository repository, UserManager<PokemonTraderApi.User.PokemonUser> userManager)
+  public TradesController(IRepository repository, UserManager<PokemonTraderApi.User.PokemonUser> userManager, LinkGenerator linkGenerator)
   {
     _repo = repository;
     _userManger = userManager;
+    _linkGenerator = linkGenerator;
   }
 
   [HttpGet]
-  public async Task<List<Trade>> GetTrades()
+  public async Task<TradesView> GetOpenTradeViews()
   {
     var user = await _userManger.GetUserAsync(User);
-    return _repo.GetTrades(user);
+    var trades = _repo.GetOpenTradeViews(user);
+    var view = new TradesView { trades = trades };
+    return view;
   }
 
   [HttpGet("all")]
@@ -32,10 +36,35 @@ public class TradesController : Util.MyControllerBase
   }
 
   [HttpGet("{tradeId}")]
-  public async Task<Trade?> GetTrade(long tradeId)
+  public async Task<TradeDetailsView> GetTradeDetails(long tradeId)
   {
     var user = await _userManger.GetUserAsync(User);
-    return _repo.GetTrade(tradeId, user);
+    var trade = _repo.GetTradeDetailsView(tradeId, user);
+    var user2 = await _userManger.FindByIdAsync(trade.trade.pokemonUserId2.ToString());
+    var tradeView = new TradeView
+    {
+      id = trade.trade.tradeId,
+      username1 = user.UserName,
+      username2 = user2.UserName,
+      startTimestamp = trade.trade.startTimestamp,
+      endTimestamp = trade.trade.endTimestamp,
+      cancled = trade.trade.cancled,
+    };
+    var inventory1 = trade.user1.Select(id => _linkGenerator.GetUriByAction(
+          HttpContext,
+          nameof(Inventory.Controller.InventoryController.GetItem),
+          "inventory",
+          new { itemId = id }
+          ) ?? throw new InvalidOperationException("unable to generate URL")).ToList();
+    var inventory2 = trade.user2.Select(id => _linkGenerator.GetUriByAction(
+          HttpContext,
+          nameof(Inventory.Controller.InventoryController.GetItem),
+          "inventory",
+          new { itemId = id }
+          ) ?? throw new InvalidOperationException("unable to generate URL")
+        ).ToList();
+    var view = new TradeDetailsView { trade = tradeView, user1ItemsUrls = inventory1, user2ItemsUrls = inventory2 };
+    return view;
   }
 
   [HttpPost("create")]
@@ -69,30 +98,4 @@ public class TradesController : Util.MyControllerBase
     _repo.LockinOffer(tradeId, user);
   }
 
-  [HttpGet("{tradeId}/offers")]
-  public async Task<List<Offer>> GetOffers(long tradeId)
-  {
-    var user = await _userManger.GetUserAsync(User);
-    return _repo.GetOffers(tradeId, user);
-  }
-
-  [HttpGet("{tradeId}/offers/info")]
-  public async Task<TradeOffers> GetTradeOffers(long tradeId)
-  {
-    var user = await _userManger.GetUserAsync(User);
-    return _repo.GetTradeOffers(tradeId, user);
-  }
-
-  [HttpGet("{tradeId}/details")]
-  public async Task<ViewModels.TradeDetailsView> GetTradeDetails(long tradeId)
-  {
-    var user = await _userManger.GetUserAsync(User);
-    var trade = _repo.GetTradeDetailsView(tradeId, user);
-    var user2 = await _userManger.FindByIdAsync(trade.trade.pokemonUserId2.ToString());
-    var tradeView = new ViewModels.TradeView(trade.trade, user.UserName, user2.UserName);
-    var inventory1 = trade.user1ItemsInventoryIds.Select(id => "/API/Inventory/item/" + id).ToList();
-    var inventory2 = trade.user2ItemsInventoryIds.Select(id => "/API/Inventory/item/" + id).ToList();
-    var view = new ViewModels.TradeDetailsView { trade = tradeView, user1ItemsUrls = inventory1, user2ItemsUrls = inventory2 };
-    return view;
-  }
 }

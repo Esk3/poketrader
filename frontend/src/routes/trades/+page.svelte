@@ -6,7 +6,10 @@
 <ul>
   {#each data.trades as trade}
     <li>
-      {trade.tradeId}
+      <a href="/trades/{trade.id}">
+        <h2>Trade with: {trade.username2}</h2>
+        <p>Started: {trade.startTimestamp}</p>
+      </a>
     </li>
   {/each}
 </ul>

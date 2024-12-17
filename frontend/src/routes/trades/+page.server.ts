@@ -1,6 +1,8 @@
-export const load = async ({ fetch }) => {
+import type { PageServerLoad } from "./$types";
+
+export const load: PageServerLoad = async ({ fetch }) => {
   const res = await fetch("/API/trades");
-  const trades = await res.json();
-  console.log(trades)
-  return { trades };
+  const view = await res.json();
+  console.log(view)
+  return { ...view };
 }
