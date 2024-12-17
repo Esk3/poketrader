@@ -26,19 +26,20 @@ public class MarketController : Util.MyControllerBase
     return _repo.GetAllOpenListings();
   }
 
-  [HttpGet("view")]
+  [HttpGet("{listingId}/view")]
   public async Task<ActionResult<ListingView>> GetListingView(long listingId)
   {
     var listing = _repo.GetListing(listingId);
     var listingUser = await _userManager.FindByIdAsync(listing.pokemonUserId.ToString());
-    var itemViewUrl = "/API/Inventory/item/" + listing.inventoryId;
-    var bids = _repo.GetGroupSortedBidsOnListing(listingId);
+    var itemViewUrl = "/API/Inventory/item/" + listing.inventoryId + "/view";
+    // TODO: limit 1
+    var bids = _repo.GetUserBidsOnListing(listingId);
     var maxBid = bids.FirstOrDefault();
     int maxBidValue = 0;
     if (maxBid is not null) { maxBidValue = maxBid.totalValue; }
     return new ListingView
     {
-      listingId = listingId,
+      id = listingId,
       username = listingUser.UserName,
       itemViewUrl = itemViewUrl,
       createTimestamp = listing.createTimestamp,
@@ -46,6 +47,26 @@ public class MarketController : Util.MyControllerBase
       cancled = listing.cancled,
       maxBidValue = maxBidValue
     };
+  }
+
+  string url(string id) => "/API/Inventory/item/" + id + "/view";
+
+  [HttpGet("{listingId}/bids/view")]
+  public async Task<ActionResult<List<UserBidsView>>> GetBidsView(long listingId)
+  {
+    var queryBids = _repo.GetUserBidsOnListing(listingId);
+    var bids = queryBids.Select(bid =>
+    {
+      var bidView = new UserBidsView
+      {
+        username = bid.username,
+        totalValue = bid.totalValue,
+        itemUrls = bid.itemIds?.Split(",").Select(id => url(id)).ToList()
+      };
+      if (bidView.itemUrls is null) { bidView.itemUrls = new List<string>(); }
+      return bidView;
+    }).ToList();
+    return bids;
   }
 
   [HttpGet("info")]
@@ -84,44 +105,26 @@ public class MarketController : Util.MyControllerBase
     return _repo.GetBidsOnListing(listingId);
   }
 
-  [HttpGet("{listingId}/bids/info")]
-  public ActionResult<List<UserBids>> GetUserBidsOnListing(long listingId)
-  {
-    return _repo.GetGroupSortedBidsOnListing(listingId);
-  }
-
-  [HttpGet("{listingId}/bids/info/max")]
-  public ActionResult<UserBids?> GetMaxUserBidsOnListing(long listingId)
-  {
-    return _repo.GetMaxUserBidOnListing(listingId);
-  }
-
   [HttpPost("{listingId}/bid")]
   [Authorize]
-  public async void BidOnListing(Form.BidForm bid, long listingId)
+  public async Task BidOnListing(Form.BidForm bid, long listingId)
   {
     var user = await _userManager.GetUserAsync(User);
-    if (bid.inventoryId is not null)
-    {
-      Debug.Assert(_repo.BidPokemonOnListing(listingId, (long)bid.inventoryId, user));
-    }
-    else if (bid.amount is not null)
-    {
-      Debug.Assert(_repo.BidOnListing(listingId, (int)bid.amount, user));
-    }
+    _repo.BidOnListing(listingId, bid.inventoryId, user);
   }
 
   [HttpPost("{listingId}/finish")]
   [Authorize]
-  public async void FinishListing(long listingId)
+  public async Task<ActionResult<string>> FinishListing(Form.FinishListing form, long listingId)
   {
     var user = await _userManager.GetUserAsync(User);
-    _repo.FinishListing(listingId, user);
+    await _repo.FinishListing(listingId, form.winnerUsername, user);
+    return "ok";
   }
 
   [HttpPost("{listingId}/cancel")]
   [Authorize]
-  public async void CancelListing(long listingId)
+  public async Task CancelListing(long listingId)
   {
     var user = await _userManager.GetUserAsync(User);
     _repo.CancelListing(listingId, user);

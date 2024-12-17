@@ -12,6 +12,8 @@ public interface IRepository
 
 
   public List<Trade> GetTrades(User.PokemonUser user);
+  public List<Trade> GetAllTrades(User.PokemonUser user);
+
   public Trade? GetTrade(long tradeId, User.PokemonUser user);
 
   public Trade CreateTrade(User.PokemonUser user, User.PokemonUser other);
@@ -263,5 +265,10 @@ public class Repository : IRepository
     }
     return result;
 
+  }
+
+  public List<Trade> GetAllTrades(User.PokemonUser user)
+  {
+    throw new NotImplementedException();
   }
 }

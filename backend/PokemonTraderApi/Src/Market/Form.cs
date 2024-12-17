@@ -7,6 +7,10 @@ public class CreateListing
 
 public class BidForm
 {
-  public int? amount { get; set; }
-  public long? inventoryId { get; set; }
+  public long inventoryId { get; set; }
+}
+
+public class FinishListing
+{
+  public required string winnerUsername { get; set; }
 }

@@ -69,3 +69,10 @@ public class UserBids
 
   }
 }
+
+public class UserBidsQueryView
+{
+  public string? username { get; set; }
+  public int totalValue { get; set; }
+  public string? itemIds { get; set; }
+}

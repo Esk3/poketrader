@@ -88,7 +88,7 @@ public class Repository : IRepository
     return pokemon;
   }
 
-  public async void InsertPokemon(PokemonSprite pokemon)
+  public async Task InsertPokemon(PokemonSprite pokemon)
   {
     await _context.GetConnection().ExecuteAsync(
         "insert into pokemon (pokemon_id, name, sprite_url) values (@Id, @Name, @SpriteUrl)",

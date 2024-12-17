@@ -7,6 +7,7 @@ public interface IRepository
   public void Setup();
   public bool Test();
   public long RecordTransfer(long? reciverId, long? senderId, int? amount, long? itemId);
+  public void RecordTransfers(long? reciverId, long? senderId, List<long> itemIds);
 }
 
 public class Repository : IRepository
@@ -29,6 +30,20 @@ public class Repository : IRepository
         select cast(last_insert_rowid() as int) as id",
         new { Reciver = reciverId, Sender = senderId, Amount = amount, ItemId }
         ).id;
+  }
+
+  public void RecordTransfers(long? Reciver, long? Sender, List<long> itemIds)
+  {
+    foreach (long itemId in itemIds)
+    {
+      _context.GetConnection().Execute(
+          @"insert into transfers
+    (reciver_pokemon_user_id, sender_pokemon_user_id, item_id)
+     values
+     (@Reciver, @Sender, @Item)",
+     new { Reciver, Sender, Item = itemId }
+          );
+    }
   }
 
   public void Setup()

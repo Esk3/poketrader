@@ -2,8 +2,8 @@ namespace PokemonTraderApi.Inventory;
 
 public class ItemView
 {
-  public int inventoryId { get; set; }
-  public int PokemonId { get; set; }
+  public int id { get; set; }
+  public int pokemonId { get; set; }
   public string? name { get; set; }
   public string? spriteUrl { get; set; }
   public string? pokemonurl { get; set; }

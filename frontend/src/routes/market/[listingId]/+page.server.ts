@@ -2,10 +2,22 @@ import type { Actions, PageServerLoad } from "./$types";
 
 export const load: PageServerLoad = async ({ params, fetch }) => {
   const listingId = params.listingId;
-  const res = await fetch("/API/Market/" + listingId + "/bids/info");
-  const bids = await res.json();
-  const inventoryRes = await fetch("/API/Inventory/info/grouped");
-  const inventory = await inventoryRes.json();
+  const res = await fetch("/API/Market/" + listingId + "/bids/view");
+  let bids = await res.json();
+  bids = bids.map(bid => {
+    return {
+      items: bid.itemUrls.map(async url => {
+        const res = await fetch(url);
+        return await res.json();
+      }), ...bid
+    }
+  });
+  const inventoryRes = await fetch("/API/Inventory/view");
+  let inventory = await inventoryRes.json();
+  inventory = inventory.map(async url => {
+    const res = await fetch(url);
+    return res.json();
+  })
   return {
     listingId,
     bids,
@@ -16,16 +28,30 @@ export const load: PageServerLoad = async ({ params, fetch }) => {
 export const actions = {
   bid: async ({ request, params, fetch }) => {
     const data = await request.formData();
-    const amount = data.get("amount");
+    const inventoryId = data.get("inventory-id");
     const res = await fetch("/API/Market/" + params.listingId + "/bid", {
       method: "POST",
       headers: {
         "Content-Type": "application/json"
       },
-      body: JSON.stringify({ amount })
+      body: JSON.stringify({ inventoryId })
     });
     if (!res.ok) {
       console.log(res);
+    }
+  },
+  finish: async ({ request, params, fetch }) => {
+    const data = await request.formData();
+    const winnerUsername = data.get("winner-username");
+    const res = await fetch("/API/Market/" + params.listingId + "/finish", {
+      method: "post",
+      headers: {
+        "Content-Type": "application/json"
+      },
+      body: JSON.stringify({ winnerUsername })
+    });
+    if (!res.ok) {
+      throw res;
     }
   }
 } satisfies Actions;

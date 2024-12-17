@@ -58,6 +58,8 @@ public class Program
 
     var app = builder.Build();
 
+    app.UseMiddleware<Middleware.ErrorHandler>();
+
     ((Data.UserStore)app.Services.GetRequiredService<IUserStore<IdentityUser>>()).Setup();
     app.SetupRespositoriesServices();
 

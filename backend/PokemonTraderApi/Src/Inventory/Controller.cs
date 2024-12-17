@@ -11,13 +11,15 @@ public class InventoryController : MyControllerBase
 {
   private readonly IRepository _repo;
   private readonly User.IRepository _userRepo;
+  private readonly Pokemon.IRepository _pokemonRepo;
   readonly UserManager<User.PokemonUser> _userManager;
 
-  public InventoryController(IRepository repository, User.IRepository userRepository, UserManager<User.PokemonUser> userManager)
+  public InventoryController(IRepository repository, User.IRepository userRepository, UserManager<User.PokemonUser> userManager, Pokemon.IRepository pokemonRepository)
   {
     _repo = repository;
     _userRepo = userRepository;
     _userManager = userManager;
+    _pokemonRepo = pokemonRepository;
   }
 
   [HttpGet]
@@ -54,5 +56,30 @@ public class InventoryController : MyControllerBase
   {
     /*var user = await _userManager.GetUserAsync(User);*/
     return _repo.GetPublicItem(itemId);
+  }
+
+  [HttpGet("item/{itemId}/view")]
+  [AllowAnonymous]
+  public async Task<ActionResult<ItemView>> GetItemView(long itemId)
+  {
+    var item = _repo.GetPublicItem(itemId);
+    var pokemon = await _pokemonRepo.GetById(item.PokemonId);
+    return new ItemView
+    {
+      id = item.inventoryId,
+      pokemonId = item.PokemonId,
+      name = pokemon.name,
+      spriteUrl = pokemon.spriteUrl,
+      pokemonurl = "/API/Pokemon/" + pokemon.name,
+    };
+  }
+
+  [HttpGet("view")]
+  public async Task<ActionResult<List<string>>> GetInventoryView()
+  {
+    var user = await _userManager.GetUserAsync(User);
+    var items = _repo.GetAllItems(user);
+    var inventoryUrls = items.Select(item => "/API/Inventory/item/" + item.inventoryId + "/view").ToList();
+    return inventoryUrls;
   }
 }

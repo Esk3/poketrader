@@ -1,6 +1,7 @@
 using PokemonTraderApi.Data;
 using Dapper;
 using System.Diagnostics;
+using Microsoft.AspNetCore.Identity;
 
 namespace PokemonTraderApi.Market;
 
@@ -19,16 +20,14 @@ public interface IRepository
   public List<ListingInfo> GetUserListingsInfo(User.PokemonUser user);
 
   public List<Bid> GetBidsOnListing(long ListingId);
-  public List<UserBids> GetGroupSortedBidsOnListing(long listingId);
-  public UserBids? GetMaxUserBidOnListing(long listingId);
 
   public long CreateListing(long inventoryItemId, User.PokemonUser user);
-  public bool BidOnListing(long listingId, int amount, User.PokemonUser user);
-  public bool BidPokemonOnListing(long listingId, long inventoryId, User.PokemonUser user);
-  public void FinishListing(long listingId, User.PokemonUser user);
+  public void BidOnListing(long listingId, long itemId, User.PokemonUser user);
+  public Task FinishListing(long listingId, string winnerUsername, User.PokemonUser user);
   public void CancelListing(long listingId, User.PokemonUser user);
 
-  public ListingView GetListingView();
+  public List<long> GetUsersWithHighestBids(long listingId, long limit = 3);
+  public List<UserBidsQueryView> GetUserBidsOnListing(long ListingId);
 }
 
 public class Repository : IRepository
@@ -37,18 +36,21 @@ public class Repository : IRepository
   private readonly User.IRepository _userRepo;
   private readonly TransferRecord.IRepository _transferRepo;
   private readonly Inventory.IRepository _inventoryRepo;
+  private readonly UserManager<User.PokemonUser> _userManager;
 
   public Repository(
       AppDbContext context,
       User.IRepository userRepository,
       TransferRecord.IRepository transferRepository,
-      Inventory.IRepository inventoryRepository
+      Inventory.IRepository inventoryRepository,
+      UserManager<User.PokemonUser> userManager
       )
   {
     _context = context;
     _userRepo = userRepository;
     _transferRepo = transferRepository;
     _inventoryRepo = inventoryRepository;
+    _userManager = userManager;
   }
 
   public void Setup()
@@ -70,8 +72,7 @@ public class Repository : IRepository
           bid_id integer primary key autoincrement,
           listing_id integer not null,
           pokemon_user_id integer not null,
-          amount integer,
-          inventory_id integer,
+          inventory_id integer not null,
           foreign key (pokemon_user_id) references pokemon_users(pokemon_user_id),
           foreign key (listing_id) references listings(listing_id)
           )
@@ -83,37 +84,20 @@ public class Repository : IRepository
     return true;
   }
 
-  public bool BidOnListing(long listingId, int amount, User.PokemonUser user)
+  public void BidOnListing(long listingId, long ItemId, User.PokemonUser user)
   {
-    // TODO: transaction
-    _userRepo.TryUpdateCoins(-amount, user.pokemonUserId);
-    _context.GetConnection().Execute(
-        @"insert into listing_bids
-        (listing_id, amount, pokemon_user_id)
-        values
-        (@ListingId, @Amount, @UserId)",
-        new { ListingId = listingId, Amount = amount, UserId = user.pokemonUserId }
-        );
-    return true;
-  }
+    var item = _inventoryRepo.GetItem(ItemId, user);
+    if (item is null) throw new Inventory.Exceptions.ItemNotFound(ItemId);
 
-  public bool BidPokemonOnListing(long ListingId, long InventoryId, User.PokemonUser user)
-  {
-    var item = _inventoryRepo.GetItem(InventoryId, user);
-    if (item is null)
-    {
-      return false;
-    }
-
-    var rowsInserted = _context.GetConnection().Execute(
+    long rowsInserted = _context.GetConnection().Execute(
         @"insert into listing_bids
         (listing_id, inventory_id, pokemon_user_id)
         values
-        (@ListingId, @InventoryId, @UserId)",
-        new { ListingId, InventoryId, UserId = user.pokemonUserId }
+        (@ListingId, @ItemId, @UserId)",
+        new { ListingId = listingId, ItemId, UserId = user.pokemonUserId }
         );
+
     Debug.Assert(rowsInserted == 1);
-    return true;
   }
 
   public void CancelListing(long listingId, User.PokemonUser user)
@@ -132,7 +116,7 @@ public class Repository : IRepository
   public long CreateListing(long inventoryItemId, User.PokemonUser user)
   {
     var item = _inventoryRepo.GetItem(inventoryItemId, user);
-    Debug.Assert(item is not null, "user doesn't have item in inventory");
+    if (item is null) throw new Inventory.Exceptions.ItemNotFound(inventoryItemId);
     var res = _context.GetConnection().QuerySingle(
         @"insert into listings (pokemon_user_id, inventory_id) values (@UserId, @InventoryId);
         select cast(last_insert_rowid() as int) as id",
@@ -141,17 +125,37 @@ public class Repository : IRepository
     return res.id;
   }
 
-  public void FinishListing(long listingId, User.PokemonUser user)
+  public async Task FinishListing(long ListingId, string winnerUsername, User.PokemonUser user)
   {
+    var winner = await _userManager.FindByNameAsync(winnerUsername);
+    if (winner is null) throw new Exceptions.InvalidWinnner(winnerUsername);
+
     var rowsUpdated = _context.GetConnection().Execute(
-        @"update listing set closed_timestamp = current_timestamp
+        @"update listings set closed_timestamp = current_timestamp
         where listing_id = @ListingId
         and closed_timestamp is null
         and cancled = false
         and pokemon_user_id = @UserId",
-        new { ListingId = listingId, UserId = user.pokemonUserId }
+        new { ListingId, UserId = user.pokemonUserId }
         );
-    Debug.Assert(rowsUpdated == 1);
+
+    if (rowsUpdated != 1) throw new Exceptions.CloseListing();
+
+    var listing = _context.GetConnection().QuerySingle<Listing>(
+        @"select * from listings where listing_id = @ListingId",
+        new { ListingId }
+        );
+
+    var items = _context.GetConnection().Query<long>(
+        @"select inventory_id from listing_bids
+        where pokemon_user_id = @WinnerId
+        and listing_id = @ListingId",
+        new { WinnerId = winner.pokemonUserId, ListingId }
+        ).ToList();
+
+    _inventoryRepo.MoveItem(listing.inventoryId, user, winner.pokemonUserId);
+
+    _inventoryRepo.MoveItems(items, winner, user.pokemonUserId);
   }
 
   public List<Listing> GetAllOpenListings()
@@ -189,21 +193,6 @@ public class Repository : IRepository
         ).ToList();
   }
 
-  public List<UserBids> GetGroupSortedBidsOnListing(long ListingId)
-  {
-    // TODO: list of inventory_id's & join on detailed inventory item
-    var result = _context.GetConnection().Query<RawUserBids>(
-        @"select bid_id, listing_id, pokemon_user_id, sum(amount) as amount, group_concat(inventory_id) as inventory_ids from listing_bids
-        where listing_id = @ListingId
-        group by (pokemon_user_id)
-        order by amount desc",
-        new { ListingId }
-        );
-    return result.Select(row =>
-    {
-      return new UserBids(row);
-    }).ToList();
-  }
 
   public List<ListingInfo> GetOpenListingsInfo()
   {
@@ -237,23 +226,38 @@ public class Repository : IRepository
         ).ToList();
   }
 
-  public UserBids? GetMaxUserBidOnListing(long ListingId)
+
+  // TODO: remove
+  public List<long> GetUsersWithHighestBids(long ListingId, long Limit = 3)
   {
-    // TODO: list of inventory_id's & join on detailed inventory item
-    return _context.GetConnection().QuerySingleOrDefault<UserBids>(
-        @"select bid_id, listing_id, pokemon_user_id, sum(amount) as amount from listing_bids
-        where listing_id = @ListingId
-        group by (pokemon_user_id)
-        order by amount desc
-        limit 1",
-        new { ListingId }
-        );
+    return _context.GetConnection().Query<long>(
+        @"select b.pokemon_user_id from listing_bids b 
+          join card_inventory i on i.inventory_id = b.inventory_id 
+          join shop_items s on i.pokemon_id = s.pokemon_id 
+          where b.listing_id = @ListingId
+          group by b.pokemon_user_id 
+          order by sum(cost) 
+          limit @Limit",
+          new { ListingId, Limit }
+        ).ToList();
   }
 
-  public ListingView GetListingView()
+  public List<UserBidsQueryView> GetUserBidsOnListing(long ListingId)
   {
-    var listing = GetListing(1);
-    var username = "xyz";
-    throw new NotImplementedException();
+    return _context.GetConnection().Query<UserBidsQueryView>(
+    @"select 
+      u.username,
+      group_concat(i.inventory_id) as item_ids,
+      sum(s.cost) as total_value
+      from listing_bids b
+        join auth_users u on u.auth_user_id = b.pokemon_user_id 
+        join card_inventory i on i.inventory_id = b.inventory_id 
+        join shop_items s on s.pokemon_id = i.pokemon_id
+      where b.listing_id = @ListingId
+      group by b.pokemon_user_id
+      order by sum(s.cost) desc
+      ",
+      new { ListingId }
+        ).ToList();
   }
 }

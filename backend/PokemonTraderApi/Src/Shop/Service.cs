@@ -13,8 +13,8 @@ public interface IRepository
   public Task<ShopPokemon?> GetPokemonById(long pokemonId);
   public ShopPokemon? GetPokemonByName(string name);
   public Task<ShopItem?> GetItem(long itemId);
-  public Task<ShopItem?> BuyItem(long itemId, User.PokemonUser user, SqliteTransaction? transaction = null);
-  public Task<ShopItem?> SellItem(long inventoryItemId, User.PokemonUser user, SqliteTransaction? transaction = null);
+  public Task<ShopItem?> BuyItem(long itemId, User.PokemonUser user);
+  public Task<ShopItem?> SellItem(long inventoryItemId, User.PokemonUser user);
 }
 
 public class Repository : IRepository
@@ -58,23 +58,18 @@ public class Repository : IRepository
     return true;
   }
 
-  public async Task<ShopItem?> BuyItem(long itemId, User.PokemonUser user, SqliteTransaction? transaction = null)
+  public async Task<ShopItem?> BuyItem(long itemId, User.PokemonUser user)
   {
     // TODO: transaction
-    /*bool commit = transaction is null;*/
-    bool commit = false;
-    if (transaction is null && false)
-    {
-      _context.GetConnection().Open();
-      transaction = _context.GetConnection().BeginTransaction();
-    }
-
     var item = await GetItem(itemId);
     var coinsRemaining = _usersRepo.TryUpdateCoins(-item.cost, user.pokemonUserId);
     if (coinsRemaining == -1) return null;
-    _inventoryRepo.InsertItem(itemId, user, transaction);
-    _transferRepo.RecordTransfer(null, user.pokemonUserId, item.cost, null);
-    if (commit) { transaction.Commit(); }
+
+    var inventoryId = _inventoryRepo.InsertItem(itemId, user);
+
+    // TODO
+    // _transferRepo.RecordTransfer(null, user.pokemonUserId, item.cost, null);
+
     return null;
   }
 
@@ -119,11 +114,11 @@ public class Repository : IRepository
         ).ToList();
   }
 
-  public async Task<ShopItem?> SellItem(long inventoryItemId, User.PokemonUser user, SqliteTransaction? transaction = null)
+  public async Task<ShopItem?> SellItem(long inventoryItemId, User.PokemonUser user)
   {
     // TODO: transaction
     var inventoryItem = _inventoryRepo.GetItem(inventoryItemId, user);
-    _inventoryRepo.DeleteItem(inventoryItemId, user, transaction);
+    _inventoryRepo.DeleteItem(inventoryItemId, user);
     var item = await GetItem(inventoryItem.PokemonId);
     _usersRepo.UpdateCoins(item.cost, user.pokemonUserId);
     _transferRepo.RecordTransfer(user.pokemonUserId, null, item.cost, null);
