@@ -9,6 +9,7 @@ public interface IRepository
   public void Setup();
   public bool Test();
 
+  public List<Item> GetItems(User.PokemonUser user);
   public List<Item> GetAllItems(User.PokemonUser user);
   public List<Item> GetGroupedItems(User.PokemonUser user);
 
@@ -67,6 +68,15 @@ public class Repository : IRepository
 
   public List<Item> GetAllItems(User.PokemonUser user)
   {
+    return _context.GetConnection().Query<Item>(
+        @"select * from card_inventory
+        where pokemon_user_id = @UserId",
+        new { UserId = user.pokemonUserId }
+        ).ToList();
+  }
+
+  public List<Item> GetItems(User.PokemonUser user)
+  {
     return _context.GetConnection()
       .Query<Item>(
           @"select i.* 
@@ -76,7 +86,12 @@ public class Repository : IRepository
             select b.inventory_id
             from listing_bids b
             join listings l on l.listing_id = b.listing_id
-            where closed_timestamp is null
+            where l.closed_timestamp is null
+            )
+          and i.inventory_id not in (
+            select l.inventory_id
+            from listings l
+            where l.closed_timestamp is null
             )
           and i.inventory_id not in (
             select o1.inventory_id
@@ -197,6 +212,6 @@ public class Repository : IRepository
           and inventory_id in @Items",
           new { ReciverId, SenderId = sender.pokemonUserId, Items }
         );
-    Debug.Assert(rowsUpdated == Items.Count());
+    Debug.Assert(rowsUpdated == Items.Count(), "maybe sender didn't own all pokemons");
   }
 }

@@ -34,8 +34,23 @@ public class InventoryController : MyControllerBase
   public async Task<ActionResult<List<string>>> GetInventoryView()
   {
     var user = await _userManager.GetUserAsync(User);
+    var items = _repo.GetItems(user);
+    var Urls = items
+      .Select(item => _linkGenerator.GetUriByAction(
+            HttpContext,
+            nameof(GetItem),
+            "inventory",
+            new { itemId = item.inventoryId }
+            ) ?? throw new InvalidOperationException("error generating URL")
+        ).ToList();
+    return Urls;
+  }
+
+  [HttpGet("all")]
+  public async Task<ActionResult<List<string>>> GetAllItems()
+  {
+    var user = await _userManager.GetUserAsync(User);
     var items = _repo.GetAllItems(user);
-    /*var inventoryUrls = items.Select(item => "/API/Inventory/item/" + item.inventoryId + "/view").ToList();*/
     var Urls = items
       .Select(item => _linkGenerator.GetUriByAction(
             HttpContext,
