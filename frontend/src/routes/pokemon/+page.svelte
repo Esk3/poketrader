@@ -1,5 +1,4 @@
 <script lang="ts">
-  import PokemonNameList from "./PokemonNameList.svelte";
   import type { PageData } from "./$types";
   import PokemonPreView from "$lib/components/PokemonPreView.svelte";
 

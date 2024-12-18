@@ -1,19 +1,24 @@
 <script>
-  import PokemonPreView from "$lib/components/PokemonPreView.svelte";
+  import PokemonCardLoading from "$lib/components/PokemonCardLoading.svelte";
+  import FlipCard from "$lib/components/FlipCard.svelte";
+import PokemonPreView from "$lib/components/PokemonPreView.svelte";
   const { children, data } = $props();
-  console.log(data);
 </script>
 
 <div>
 
 <ul>
-{#each data.pokemon as item}
+{#each data.pokemon as item, i}
 <li>
 <a href="/shop/{item.pokemonId}">
-{#await item.pokemon then pokemon}
-<PokemonPreView {pokemon} >
-{item.cost} coins
-</PokemonPreView>
+{#await item.pokemon}
+  <PokemonCardLoading/>
+{:then pokemon}
+  <FlipCard color="blue" width="130px" height="200px" delay={i*100}>
+  <PokemonPreView {pokemon} >
+    {item.cost} coins
+  </PokemonPreView>
+  </FlipCard>
 {/await}
 </a>
 </li>

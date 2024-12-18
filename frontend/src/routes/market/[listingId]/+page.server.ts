@@ -2,6 +2,7 @@ import type { Actions, PageServerLoad } from "./$types";
 
 export const load: PageServerLoad = async ({ params, fetch }) => {
   const listingId = params.listingId;
+
   const res = await fetch("/API/Market/" + listingId + "/bids");
   let bids = await res.json();
   console.log(bids);
@@ -13,12 +14,14 @@ export const load: PageServerLoad = async ({ params, fetch }) => {
       }), ...bid
     }
   });
+
   const inventoryRes = await fetch("/API/Inventory");
   let inventory = await inventoryRes.json();
   inventory = inventory.map(async url => {
     const res = await fetch(url);
     return res.json();
-  })
+  });
+
   return {
     listingId,
     bids,

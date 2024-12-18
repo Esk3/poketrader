@@ -2,15 +2,17 @@ import type { ServerLoad } from "@sveltejs/kit";
 
 export const load: ServerLoad = async ({ fetch }) => {
   const res = await fetch("/API/Market");
-  const data = await res.json();
-  const listings = data.map(async listing => {
-    const res = await fetch(listing);
-    const view = await res.json();
+  const listingUrls = await res.json();
 
-    const itemRes = await fetch(view.itemUrl);
-    const itemView = await itemRes.json();
+  const listings = listingUrls.map(async (url: string) => {
+    const res = await fetch(url);
+    const listing = await res.json();
 
-    return { item: itemView, ...view };
+    const itemRes = await fetch(listing.itemUrl);
+    const item = await itemRes.json();
+
+    return { item, ...listing };
   });
+
   return { listings };
 };
