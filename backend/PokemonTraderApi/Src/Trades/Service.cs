@@ -2,6 +2,7 @@ using PokemonTraderApi.Data;
 using Microsoft.Data.Sqlite;
 using Dapper;
 using System.Diagnostics;
+using Microsoft.AspNetCore.Identity;
 
 namespace PokemonTraderApi.Trades;
 
@@ -22,7 +23,7 @@ public interface IRepository
   public Trade CreateTrade(User.PokemonUser user, User.PokemonUser other);
   public void AddInventoryItem(long inventoryId, long tradeId, User.PokemonUser user);
   public void RemoveInventoryItem(long inventoryId, long tradeId, User.PokemonUser user);
-  public void LockinOffer(long tradeId, User.PokemonUser user);
+  public Task LockinOffer(long tradeId, User.PokemonUser user);
   public void CancelTrade(long tradeId, User.PokemonUser user);
 
   public List<Offer> GetOffers(long tradeId, User.PokemonUser user);
@@ -36,11 +37,20 @@ public class Repository : IRepository
 {
   private readonly AppDbContext _context;
   private readonly TransferRecord.IRepository _transferRecord;
+  private readonly UserManager<User.PokemonUser> _userManager;
+  private readonly Inventory.IRepository _inventoryRepo;
 
-  public Repository(AppDbContext context, TransferRecord.IRepository transferRecordRepository)
+  public Repository(
+      AppDbContext context,
+      TransferRecord.IRepository transferRecordRepository,
+      UserManager<User.PokemonUser> userManager,
+      Inventory.IRepository inventoryRepository
+      )
   {
     _context = context;
     _transferRecord = transferRecordRepository;
+    _userManager = userManager;
+    _inventoryRepo = inventoryRepository;
   }
 
   public void Setup()
@@ -136,9 +146,8 @@ public class Repository : IRepository
         ).ToList();
   }
 
-  public void LockinOffer(long TradeId, User.PokemonUser user)
+  public async Task LockinOffer(long TradeId, User.PokemonUser user)
   {
-    // TODO samme bruker kan `lock in` flere ganger
     _context.GetConnection().Execute(
         @"insert into card_trades_offers 
         (trade_id, pokemon_user_id, type)
@@ -146,58 +155,66 @@ public class Repository : IRepository
         (@TradeId, @UserId, 'lockin')",
         new { TradeId, UserId = user.pokemonUserId }
         );
+    if (tradeIsFinshed(TradeId))
+    {
+      await finishTrade(TradeId, user);
+    }
+  }
+
+  bool tradeIsFinshed(long TradeId)
+  {
     var last2 = _context.GetConnection().Query<Offer>(
-        "select * from card_trades_offers where trade_id = @TradeId order by timestamp desc limit 2",
+        @"select * from card_trades_offers 
+        where trade_id = @TradeId 
+        order by timestamp 
+        desc limit 2",
         new { TradeId }
-        ).ToList();
-    if (last2.All(offer =>
-    {
-      return offer.type == Type.Lockin;
-    }))
-    {
-      var trade = GetTrade(TradeId, user);
-      var rowsUpdated = _context.GetConnection().Execute(
-          @"update card_trades set end_timestamp = current_timestamp 
+        );
+    var actions = last2.Take(2)
+      .DistinctBy(action => action.pokemonUserId)
+      .TakeWhile(action => action.type == Type.Lockin);
+
+    return actions.Count() == 2;
+  }
+  async Task finishTrade(long TradeId, User.PokemonUser user)
+  {
+    var trade = GetTrade(TradeId, user);
+    if (trade is null) throw new Exceptions.TradeNotFound(TradeId);
+
+    var rowsUpdated = _context.GetConnection().Execute(
+        @"update card_trades set end_timestamp = current_timestamp 
           where trade_id = @TradeId
           and @UserId in (pokemon_user_id_1, pokemon_user_id_2)
           and end_timestamp is null",
-          new { TradeId, UserId = user.pokemonUserId }
-          );
-      Debug.Assert(rowsUpdated == 1);
-      int otherUserId;
-      if (trade.pokemonUserId1 == user.pokemonUserId)
-      {
-        otherUserId = trade.pokemonUserId2;
-      }
-      else
-      {
-        otherUserId = trade.pokemonUserId1;
-      }
+        new { TradeId, UserId = user.pokemonUserId }
+        );
 
-      var offers = GetOffers(TradeId, user);
-      var (usersOffers, otherUsersOffers) = SplitItemsInOffer(offers, user);
-      foreach (var offer in usersOffers)
-      {
-        _transferRecord.RecordTransfer(otherUserId, user.pokemonUserId, null, offer.inventoryId);
-      }
-      foreach (var offer in otherUsersOffers)
-      {
-        _transferRecord.RecordTransfer(user.pokemonUserId, otherUserId, null, offer.inventoryId);
-      }
-      _context.GetConnection().Execute(
-          @"update card_inventory set pokemon_user_id = @NewUserId
-          where pokemon_user_id = @OldUserId
-          and inventory_id in @Items",
-          new { NewUserId = otherUserId, OldUserId = user.pokemonUserId, Items = usersOffers.Select(offer => offer.inventoryId).ToList() }
-          );
+    if (rowsUpdated == 0) throw new Exceptions.TradeAlreadyClosed(TradeId);
+    Debug.Assert(rowsUpdated == 1);
 
-      _context.GetConnection().Execute(
-          @"update card_inventory set pokemon_user_id = @NewUserId
-          where pokemon_user_id = @OldUserId
-          and inventory_id in @Items",
-          new { NewUserId = user.pokemonUserId, OldUserId = otherUserId, Items = otherUsersOffers.Select(offer => offer.inventoryId).ToList() }
-          );
+    long otherUserId;
+    if (trade.pokemonUserId1 == user.pokemonUserId)
+    {
+      otherUserId = trade.pokemonUserId2;
     }
+    else
+    {
+      otherUserId = trade.pokemonUserId1;
+    }
+
+    var otherUser = await _userManager.FindByIdAsync(otherUserId.ToString());
+
+    if (otherUser is null) throw new Exceptions.CorruptedTrade(TradeId);
+
+    var offers = GetOffers(TradeId, user);
+
+    if (offers is null) throw new NotImplementedException("TODO: abort empty trade");
+
+    var (usersOffers, otherUsersOffers) = SplitItemsInOffer(offers, user);
+
+    _inventoryRepo.MoveItems(usersOffers.Select(offer => offer.inventoryId).ToList(), user, otherUserId);
+
+    _inventoryRepo.MoveItems(otherUsersOffers.Select(offer => offer.inventoryId).ToList(), otherUser, user.pokemonUserId);
   }
 
   public void RemoveInventoryItem(long InventoryId, long TradeId, User.PokemonUser user)

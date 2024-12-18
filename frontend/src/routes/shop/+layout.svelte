@@ -20,19 +20,24 @@
 {/each}
 </ul>
 
+<div>
 {@render children()}
+</div>
 </div>
 
 <style>
+div {
+display: flex;
+}
 ul{
 display: flex;
-flex-wrap: wrap;
-list-style: none;
+         flex-wrap: wrap;
+         list-style: none;
 padding:0;
 gap: 1em;
 }
 *{
-text-decoration: none;
+  text-decoration: none;
 color: black;
 }
 </style>

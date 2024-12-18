@@ -41,13 +41,26 @@ public class ErrorHandler
       await context.Response.WriteAsJsonAsync(new { Message = "username not found:" + err.Message });
 
     }
+    catch (Trades.Exceptions.CorruptedTrade err)
+    {
+      context.Response.StatusCode = StatusCodes.Status500InternalServerError;
+      await context.Response.WriteAsJsonAsync(new { Message = "Trade corruped", id = err.tradeId });
+    }
+    catch (Trades.Exceptions.TradeAlreadyClosed err)
+    {
+      context.Response.StatusCode = StatusCodes.Status400BadRequest;
+      await context.Response.WriteAsJsonAsync(new { Message = "Trade already closed", id = err.tradeId });
+    }
+    catch (Trades.Exceptions.TradeNotFound err)
+    {
+      context.Response.StatusCode = StatusCodes.Status404NotFound;
+      await context.Response.WriteAsJsonAsync(new { Message = "Trade not found", id = err.tradeId });
+    }
 
     catch (Exception ex)
     {
       Console.WriteLine($"Unhandled Exception: {ex}");
-      throw ex;
-      /*context.Response.StatusCode = StatusCodes.Status500InternalServerError;*/
-      /*await context.Response.WriteAsJsonAsync(new { Success = false, Message = "An error occurred while processing your request." });*/
+      /*throw ex;*/
     }
   }
 }

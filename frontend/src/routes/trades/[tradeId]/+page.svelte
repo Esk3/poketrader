@@ -14,7 +14,7 @@
   {#await fut then item}
     <ItemView {item} />
     <form method="post" action="?/remove">
-      <input type="hidden" name="inventory-id" value={item.inventoryId} />
+      <input type="hidden" name="inventory-id" value={item.id} />
       <input type="submit" value="Remove" />
     </form>
   {/await}

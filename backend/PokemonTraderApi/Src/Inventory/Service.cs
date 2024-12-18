@@ -68,7 +68,29 @@ public class Repository : IRepository
   public List<Item> GetAllItems(User.PokemonUser user)
   {
     return _context.GetConnection()
-      .Query<Item>("select * from card_inventory where pokemon_user_id = @UserId",
+      .Query<Item>(
+          @"select i.* 
+          from card_inventory i
+          where pokemon_user_id = @UserId
+          and i.inventory_id not in (
+            select b.inventory_id
+            from listing_bids b
+            join listings l on l.listing_id = b.listing_id
+            where closed_timestamp is null
+            )
+          and i.inventory_id not in (
+            select o1.inventory_id
+            from card_trades_offers o1 
+            join card_trades t on t.trade_id = o1.trade_id
+            left join card_trades_offers o2 on o1.trade_id = o2.trade_id 
+              and o1.inventory_id = o2.inventory_id 
+              and o1.timestamp < o2.timestamp 
+              where o1.type = 'add' 
+              and (o2.type is null or o2.type = 'remove') 
+              and o2.offer_id is null
+              and t.end_timestamp is null
+            )
+          ",
           new { UserId = user.pokemonUserId })
       .ToList();
   }

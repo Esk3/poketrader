@@ -95,7 +95,7 @@ public class TradesController : Util.MyControllerBase
   public async Task Lockin(long tradeId)
   {
     var user = await _userManger.GetUserAsync(User);
-    _repo.LockinOffer(tradeId, user);
+    await _repo.LockinOffer(tradeId, user);
   }
 
 }
