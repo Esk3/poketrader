@@ -2,9 +2,13 @@ import { ApiUrl } from "$lib";
 import type { Actions, PageServerLoad } from "./$types";
 
 export const load: PageServerLoad = async ({ fetch, }) => {
-  const endpoint = ApiUrl + "Inventory/info/grouped";
-  const res = await fetch(endpoint);
-  const inventory = await res.json();
+  const res = await fetch("/API/Inventory");
+  let inventory = await res.json();
+  inventory = inventory.map(async url => {
+    const res = await fetch(url);
+    const item = await res.json();
+    return item;
+  });
   return { inventory };
 }
 

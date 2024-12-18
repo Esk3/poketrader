@@ -1,17 +1,16 @@
 <script lang="ts">
-  interface ItemView {
-    id: number;
+  interface PokemonView {
+    name: string;
     pokemonId: number;
     spriteUrl: string;
-    pokemonurl: string;
-    name: string;
   }
-  const { item }: { item: ItemView } = $props();
+  const { pokemon, children }: { pokemon: PokemonView, children: any | undefined } = $props();
 </script>
 
-<div data-item-id={item.id} data-pokemon-id={item.pokemonId}>
-  <p>{item.name}</p>
-  <img src={item.spriteUrl} alt="{item.name} sprite" />
+<div data-pokemon-id={pokemon.pokemonId}>
+  <p>{pokemon.name}</p>
+  <img src={pokemon.spriteUrl} alt="{pokemon.name} sprite" />
+  {@render children?.()}
 </div>
 
 <style>

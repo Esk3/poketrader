@@ -1,5 +1,5 @@
 <script lang="ts">
-  import PokemonSprite from "$lib/components/PokemonSprite.svelte";
+  import ItemView from "$lib/components/ItemView.svelte";
   import type { PageServerData } from "./$types";
 
   const { data }: { data: PageServerData } = $props();
@@ -12,7 +12,7 @@
 
 {#each data.inventory1 as fut}
   {#await fut then item}
-    <PokemonSprite id={item.pokemonId} />
+    <ItemView {item} />
     <form method="post" action="?/remove">
       <input type="hidden" name="inventory-id" value={item.inventoryId} />
       <input type="submit" value="Remove" />
@@ -24,7 +24,7 @@
 
 {#each data.inventory2 as fut}
   {#await fut then item}
-    <PokemonSprite id={item.pokemonId} />
+    <ItemView {item} />
   {/await}
 {/each}
 
@@ -34,10 +34,12 @@
 </form>
 <hr />
 
-{#each data.inventory as item}
-  <PokemonSprite id={item.pokemonId} />
-  <form method="post" action="?/add">
-    <input type="hidden" name="inventory-id" value={item.inventoryId} />
-    <input type="submit" value="Add" />
-  </form>
+{#each data.inventory as fut}
+  {#await fut then item}
+    <ItemView {item} />
+    <form method="post" action="?/add">
+      <input type="hidden" name="inventory-id" value={item.id} />
+      <input type="submit" value="Add" />
+    </form>
+  {/await}
 {/each}

@@ -2,10 +2,13 @@ import { ApiUrl } from "$lib";
 import type { PageServerLoad } from "./$types";
 
 export const load: PageServerLoad = async ({ fetch, url }) => {
-  // TODO "/Inventory/view"
-  const grouped = url.searchParams.get("grouped") == "false" ? false : true;
-  const endpoint = ApiUrl + "Inventory/info" + (grouped ? "/grouped" : "");
-  const res = await fetch(endpoint);
-  const inventory = await res.json();
+  const res = await fetch("/API/Inventory");
+  let inventory = await res.json();
+  inventory = inventory.map(async url => {
+    const res = await fetch(url);
+    const item = await res.json();
+    return item;
+  });
+  console.log(inventory);
   return { inventory };
 }

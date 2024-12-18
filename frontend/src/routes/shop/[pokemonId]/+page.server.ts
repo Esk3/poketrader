@@ -1,4 +1,4 @@
-import type { Actions } from "./$types";
+import type { Actions } from "../[pokemonName]/$types";
 
 export const actions = {
   buy: async ({ fetch, request, params }) => {

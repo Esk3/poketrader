@@ -29,7 +29,7 @@ public class MarketController : Util.MyControllerBase
     var listings = _repo.GetAllOpenListings();
     var urls = listings.Select(listing => _linkGenerator.GetUriByAction(
           HttpContext,
-          nameof(GetListingView),
+          nameof(GetListing),
           "market",
           new { listingId = listing.listingId }
           ) ?? throw new InvalidOperationException("unable to generate URL")
@@ -37,12 +37,17 @@ public class MarketController : Util.MyControllerBase
     return urls;
   }
 
-  [HttpGet("{listingId}/view")]
-  public async Task<ActionResult<ListingView>> GetListingView(long listingId)
+  [HttpGet("{listingId}")]
+  public async Task<ActionResult<ListingView>> GetListing(long listingId)
   {
     var listing = _repo.GetListing(listingId);
     var listingUser = await _userManager.FindByIdAsync(listing.pokemonUserId.ToString());
-    var itemViewUrl = "/API/Inventory/item/" + listing.inventoryId + "/view";
+    var itemUrl = _linkGenerator.GetUriByAction(
+        HttpContext,
+        nameof(Inventory.Controller.InventoryController.GetItem),
+        "inventory",
+        new { itemId = listing.inventoryId }
+        ) ?? throw new InvalidOperationException("unable to generate URL");
     // TODO: limit 1
     var bids = _repo.GetUserBidsOnListing(listingId);
     var maxBid = bids.FirstOrDefault();
@@ -52,15 +57,13 @@ public class MarketController : Util.MyControllerBase
     {
       id = listingId,
       username = listingUser.UserName,
-      itemViewUrl = itemViewUrl,
+      itemUrl = itemUrl,
       createTimestamp = listing.createTimestamp,
       closedTimestamp = listing.closedTimestamp,
       cancled = listing.cancled,
       maxBidValue = maxBidValue
     };
   }
-
-  string url(string id) => "/API/Inventory/item/" + id + "/view";
 
   [HttpGet("{listingId}/bids")]
   public async Task<ActionResult<List<UserBidsView>>> GetBidsView(long listingId)
@@ -72,9 +75,13 @@ public class MarketController : Util.MyControllerBase
       {
         username = bid.username,
         totalValue = bid.totalValue,
-        itemUrls = bid.itemIds?.Split(",").Select(id => url(id)).ToList()
+        itemUrls = bid.itemIds?.Split(",").Select(id => _linkGenerator.GetUriByAction(
+              HttpContext,
+              nameof(Inventory.Controller.InventoryController.GetItem),
+              "inventory",
+              new { itemId = id }
+              ) ?? throw new InvalidOperationException("unable to generate URL")).ToList() ?? new List<string>()
       };
-      if (bidView.itemUrls is null) { bidView.itemUrls = new List<string>(); }
       return bidView;
     }).ToList();
     return bids;

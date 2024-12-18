@@ -5,7 +5,7 @@ public class ListingView
   public long id { get; set; }
   public string? username { get; set; }
   public int itemId { get; set; }
-  public string? itemViewUrl { get; set; }
+  public string? itemUrl { get; set; }
   public string? createTimestamp { get; set; }
   public string? closedTimestamp { get; set; }
   public bool cancled { get; set; }

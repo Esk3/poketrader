@@ -50,6 +50,7 @@ public class InventoryController : MyControllerBase
   [HttpGet("{itemId}")]
   [AllowAnonymous]
   public async Task<ActionResult<ItemView>> GetItem(long itemId)
+
   {
     var item = _repo.GetPublicItem(itemId);
     var pokemon = await _pokemonRepo.GetById(item.PokemonId);

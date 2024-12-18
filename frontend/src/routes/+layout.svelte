@@ -38,4 +38,9 @@ gap: 1em;
 li.split {
 margin-left: auto;
 }
+:root {
+  --main: red;
+  --second: blue;
+  --text: black;
+}
 </style>

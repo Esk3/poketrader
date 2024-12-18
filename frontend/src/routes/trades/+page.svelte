@@ -3,6 +3,7 @@
 </script>
 
 <a href="/trades/create">Ny trade</a>
+<hr />
 <ul>
   {#each data.trades as trade}
     <li>
@@ -13,3 +14,21 @@
     </li>
   {/each}
 </ul>
+
+<style>
+  ul {
+    display: flex;
+    flex-direction: column;
+    list-style: none;
+    padding: 0;
+    & a {
+      border: 1px solid black;
+      text-decoration: none;
+      color: var(--text);
+      padding: 1em;
+      & * {
+        width: fit-content;
+      }
+    }
+  }
+</style>
