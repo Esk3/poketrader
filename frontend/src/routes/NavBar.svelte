@@ -7,9 +7,11 @@
   <ul bind:this={ul}>
     <li class="menu">
       <button
+        class="menu"
+        aria-label="menu button"
         onclick={() => {
           ul.classList.toggle("show");
-        }}>toggle</button
+        }}><img src="/hamburger-icon.svg" alt="menu icon" /></button
       >
     </li>
     {#each pages as page}
@@ -26,9 +28,13 @@
       <li class="user"><a href="/register">Register</a></li>
       <li class="user"><a href="/login">Login</a></li>
     {:else}
-      <li>Coins: <span class="user">{user.coins}</span></li>
+      <li class="user money">{user.coins}</li>
       <li>Logged in as: <span class="user"> {user.username}</span></li>
-      <li class="user"><a href="/logout">Logout</a></li>
+      <li class="user">
+        <form action="/logout" method="post">
+          <input class="logout-button" type="submit" value="Logout" />
+        </form>
+      </li>
     {/if}
   </ul>
 </nav>
@@ -71,6 +77,9 @@
     }
     li.menu {
       display: block !important;
+      & button {
+        color: black;
+      }
     }
 
     :global(ul.show > li) {
@@ -79,5 +88,13 @@
     :global(ul.show) {
       flex-direction: column;
     }
+  }
+  button.menu,
+  input.logout-button {
+    background: none;
+    border: medium none;
+  }
+  button.menu:hover {
+    background-color: darkred;
   }
 </style>

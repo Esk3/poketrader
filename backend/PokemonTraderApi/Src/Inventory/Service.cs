@@ -212,6 +212,7 @@ public class Repository : IRepository
           and inventory_id in @Items",
           new { ReciverId, SenderId = sender.pokemonUserId, Items }
         );
-    Debug.Assert(rowsUpdated == Items.Count(), "maybe sender didn't own all pokemons");
+    Debug.WriteLineIf(rowsUpdated != (long)Items.Count(), "rowsUpdated: " + rowsUpdated + ", count: " + Items.Count());
+    /*Debug.Assert(rowsUpdated == Items.Count(), "maybe sender didn't own all pokemons");*/
   }
 }

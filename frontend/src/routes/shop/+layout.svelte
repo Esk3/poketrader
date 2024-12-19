@@ -16,7 +16,7 @@
         {:then pokemon}
           <FlipCard width="130px" height="200px" delay={i*100} loading={PokemonCardLoading}>
           <PokemonPreView {pokemon} >
-          {item.cost} coins
+          <span class="money">{item.cost} </span>
           </PokemonPreView>
           </FlipCard>
         {/await}

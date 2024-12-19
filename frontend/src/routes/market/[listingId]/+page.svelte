@@ -5,9 +5,15 @@
   const { data } = $props();
   let selectedItem = $state(null);
   const eier = data.user.username == data.listing.username;
+  const closed = data.listing.closedTimestamp != null;
   console.log(data);
 </script>
 
+{#if closed}
+  <h1>Listing closed at: {data.listing.closedTimestamp}</h1>
+{/if}
+
+<a href="/market">Back</a>
 pris:
 {#await data.item}
   <PokemonCardLoading />
@@ -18,34 +24,49 @@ pris:
 {/await}
 
 <hr />
+{#if closed}
+  <h2>TODO: winner</h2>
+  <hr />
+{/if}
 
-{#each data.bids as bid}
-  {#if eier}
-    <form method="post" action="?/finish">
-      <input type="hidden" name="winner-username" value={bid.username} />
-      <input type="submit" value="Make winner" />
-    </form>
-  {/if}
-  <p>{bid.username}</p>
-  <p>{bid.totalValue}</p>
+<p>Bids:</p>
+<ul>
+  {#each data.bids as bid}
+    <li class="bid">
+      <div class="info">
+        {#if eier && !closed}
+          <form method="post" action="?/finish">
+            <input type="hidden" name="winner-username" value={bid.username} />
+            <input type="submit" value="Make winner" />
+          </form>
+        {/if}
+        <p>{bid.username}</p>
+        <p class="money">
+          {bid.totalValue}
+        </p>
+      </div>
 
-  {#each bid.items as fut, i}
-    {#await fut}
-      <PokemonCardLoading />
-    {:then item}
-      <FlipCard
-        width="130px"
-        height="200px"
-        delay={(i + 5) * 100}
-        loading={PokemonCardLoading}
-      >
-        <ItemView {item} />
-      </FlipCard>
-    {/await}
+      {#each bid.items as fut, i}
+        {#await fut}
+          <PokemonCardLoading />
+        {:then item}
+          <FlipCard
+            width="130px"
+            height="200px"
+            delay={(i + 5) * 100}
+            loading={PokemonCardLoading}
+          >
+            <ItemView {item} />
+          </FlipCard>
+        {/await}
+      {/each}
+    </li>
+  {:else}
+    <p>det er ingen bids {!eier ? "ver den første til og bidde" : ""}</p>
   {/each}
-{/each}
+</ul>
 
-{#if !eier}
+{#if !eier && !closed}
   <hr />
   {#if selectedItem}
     <ItemView item={selectedItem} />
@@ -77,3 +98,21 @@ pris:
     ingen items i inventory
   {/each}
 {/if}
+
+<style>
+  ul {
+    display: flex;
+    flex-direction: column;
+    gap: 1em;
+    list-style: none;
+    padding: 0;
+  }
+  .bid {
+    width: 100%;
+    background-color: gray;
+    display: flex;
+    gap: 1em;
+    padding: 1em;
+    border-radius: 1em;
+  }
+</style>

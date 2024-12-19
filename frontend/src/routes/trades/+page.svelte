@@ -1,5 +1,6 @@
 <script lang="ts">
   const { data } = $props();
+  console.log(data);
 </script>
 
 <a href="/trades/create">Ny trade</a>

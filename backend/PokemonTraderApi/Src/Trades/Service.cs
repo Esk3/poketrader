@@ -1,5 +1,4 @@
 using PokemonTraderApi.Data;
-using Microsoft.Data.Sqlite;
 using Dapper;
 using System.Diagnostics;
 using Microsoft.AspNetCore.Identity;
@@ -305,7 +304,9 @@ public class Repository : IRepository
         from card_trades t
         join auth_users u1 on u1.auth_user_id = t.pokemon_user_id_1
         join auth_users u2 on u2.auth_user_id = t.pokemon_user_id_2
-        where t.end_timestamp is null"
+        where t.end_timestamp is null
+        and @UserId in (u1.auth_user_id, u2.auth_user_id)",
+          new { UserId = user.pokemonUserId }
         ).ToList();
   }
 

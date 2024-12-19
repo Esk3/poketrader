@@ -20,3 +20,14 @@ main {
 hr {
   width: 100%;
 }
+
+.money::before {
+  --width: 10px;
+  --height: 20px;
+  background-image: url("/poke-dollar.svg");
+  background-size: var(--width) var(--height);
+  display: inline-block;
+  width: var(--width);
+  height: var(--height);
+  content: "";
+}

@@ -1,3 +1,4 @@
+import { redirect } from "@sveltejs/kit";
 import type { Actions } from "./$types";
 
 export const actions = {
@@ -14,6 +15,6 @@ export const actions = {
         throw res;
       }
     }
-
+    return redirect(303, "/shop");
   }
 } satisfies Actions;

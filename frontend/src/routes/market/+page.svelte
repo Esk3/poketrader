@@ -13,7 +13,7 @@
         <a href="/market/{listing.id}">
           <p>Creator: {listing.username}</p>
           <ItemView item={listing.item} />
-          <p>Max bid: {listing.maxBidValue}</p>
+          <p>Max bid: <span class="money">{listing.maxBidValue}</span></p>
         </a>
       {/await}
     </li>

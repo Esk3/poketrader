@@ -1,4 +1,5 @@
 import { ApiUrl } from "$lib";
+import { redirect } from "@sveltejs/kit";
 import type { Actions, PageServerLoad } from "./$types";
 
 export const load: PageServerLoad = async ({ fetch, }) => {
@@ -26,5 +27,6 @@ export const actions = {
     if (!res.ok) {
       throw res;
     }
+    return redirect(303, "/market");
   }
 } satisfies Actions;

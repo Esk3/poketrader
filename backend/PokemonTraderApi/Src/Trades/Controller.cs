@@ -25,8 +25,18 @@ public class TradesController : Util.MyControllerBase
   {
     var user = await _userManger.GetUserAsync(User);
     if (user is null) return Forbid("pokemon user not found");
+
     var trades = _repo.GetOpenTradeViews(user);
+    trades.ForEach(trade =>
+    {
+      if (trade.username1 != user.UserName)
+      {
+        trade.username2 = trade.username1;
+        trade.username1 = user.UserName;
+      }
+    });
     var view = new TradesView { trades = trades };
+
     return view;
   }
 
