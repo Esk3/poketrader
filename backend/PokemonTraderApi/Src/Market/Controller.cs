@@ -41,7 +41,10 @@ public class MarketController : Util.MyControllerBase
   public async Task<ActionResult<ListingView>> GetListing(long listingId)
   {
     var listing = _repo.GetListing(listingId);
+    if (listing is null) return NotFound("listing not found");
     var listingUser = await _userManager.FindByIdAsync(listing.pokemonUserId.ToString());
+    if (listingUser is null) throw new Exceptions.ListingCreatorNotFound(listingId);
+
     var itemUrl = _linkGenerator.GetUriByAction(
         HttpContext,
         nameof(Inventory.Controller.InventoryController.GetItem),
@@ -66,7 +69,7 @@ public class MarketController : Util.MyControllerBase
   }
 
   [HttpGet("{listingId}/bids")]
-  public async Task<ActionResult<List<UserBidsView>>> GetBidsView(long listingId)
+  public ActionResult<List<UserBidsView>> GetBidsView(long listingId)
   {
     var queryBids = _repo.GetUserBidsOnListing(listingId);
     var bids = queryBids.Select(bid =>
@@ -98,27 +101,32 @@ public class MarketController : Util.MyControllerBase
 
   [HttpPost("{listingId}/bid")]
   [Authorize]
-  public async Task BidOnListing(Form.BidForm bid, long listingId)
+  public async Task<ActionResult> BidOnListing(Form.BidForm bid, long listingId)
   {
     var user = await _userManager.GetUserAsync(User);
+    if (user is null) return Forbid("pokemon user not found");
     _repo.BidOnListing(listingId, bid.inventoryId, user);
+    return Ok();
   }
 
   [HttpPost("{listingId}/finish")]
   [Authorize]
-  public async Task<ActionResult<string>> FinishListing(Form.FinishListing form, long listingId)
+  public async Task<ActionResult> FinishListing(Form.FinishListing form, long listingId)
   {
     var user = await _userManager.GetUserAsync(User);
+    if (user is null) return Forbid("pokemon user not found");
     await _repo.FinishListing(listingId, form.winnerUsername, user);
-    return "ok";
+    return Ok();
   }
 
   [HttpPost("{listingId}/cancel")]
   [Authorize]
-  public async Task CancelListing(long listingId)
+  public async Task<ActionResult> CancelListing(long listingId)
   {
     var user = await _userManager.GetUserAsync(User);
+    if (user is null) return Forbid("pokemon user not found");
     _repo.CancelListing(listingId, user);
+    return Ok();
   }
 
   // TODO: get listings made by user

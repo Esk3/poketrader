@@ -24,9 +24,16 @@
   ul {
     padding: 0;
     list-style: none;
+    display: flex;
+    flex-direction: column;
+    gap: 1em;
   }
   li {
     border: 1px solid black;
     width: 200px;
+    & * {
+      color: var(--text);
+      text-decoration: none;
+    }
   }
 </style>

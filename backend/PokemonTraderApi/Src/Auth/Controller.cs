@@ -2,6 +2,7 @@ using PokemonTraderApi.Util;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Identity;
+using System.Diagnostics;
 
 namespace PokemonTraderApi.Auth.Controller;
 
@@ -26,6 +27,7 @@ public class AuthController : MyControllerBase
     if (!result.Succeeded) Console.WriteLine(result.Errors.FirstOrDefault());
     if (!result.Succeeded) return BadRequest("failed to register");
     user = await _userManager.FindByNameAsync(user.UserName);
+    Debug.Assert(user is not null, "error creating user");
     pokemonUserRepository.Register(user);
     return Ok();
   }
@@ -44,7 +46,7 @@ public class AuthController : MyControllerBase
   }
 
   [HttpPost("signout")]
-  public async Task SignOut()
+  public new async Task SignOut()
   {
     await _signinManager.SignOutAsync();
   }

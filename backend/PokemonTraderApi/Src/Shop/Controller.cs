@@ -38,23 +38,32 @@ public class ShopController : Util.MyControllerBase
     return items;
   }
 
-  /*[HttpGet("{pokemonId}")]*/
-  /*public async Task<ActionResult<ShopItem?>> GetById(long pokemonId)*/
-  /*{*/
-  /*  return await _repo.GetItem(pokemonId);*/
-  /*}*/
-  /**/
-  /*[HttpGet("{name}")]*/
-  /*public ShopItem? GetByName(string name)*/
-  /*{*/
-  /*  return null;*/
-  /*}*/
+  [HttpGet("id/{pokemonId}")]
+  public async Task<ActionResult<ShopItem?>> GetById(long pokemonId)
+  {
+    var item = await _repo.GetItem(pokemonId);
+    if (item is null) return NotFound("item not found");
+    item.pokemonUrl = _linkGenerator.GetUriByAction(
+        HttpContext,
+        nameof(Pokemon.Controller.PokemonController.GetById),
+        "pokemon",
+        new { pokemonid = item.pokemonId }
+        ) ?? throw new InvalidOperationException("unable to generate URL");
+    return item;
+  }
+
+  [HttpGet("name/{name}")]
+  public ShopItem? GetByName(string name)
+  {
+    throw new NotImplementedException();
+  }
 
   [HttpPost("{pokemonId}/buy")]
   [Authorize]
   public async Task<ActionResult<ShopItem?>> Buy(long pokemonId)
   {
     var user = await _userManger.GetUserAsync(User);
+    if (user is null) return Forbid("pokemon user not found");
     var item = await _repo.BuyItem(pokemonId, user);
     return item;
   }

@@ -6,4 +6,17 @@
 
 body {
   margin: 0;
+  display: flex;
+  flex-flow: column nowrap;
+  align-items: center;
+}
+
+main {
+  display: flex;
+  flex-flow: column nowrap;
+  align-items: center;
+}
+
+hr {
+  width: 100%;
 }

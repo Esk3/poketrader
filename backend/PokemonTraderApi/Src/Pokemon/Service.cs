@@ -58,7 +58,7 @@ public class Repository : IRepository
       if (Pokemon is not null)
       {
         pokemon = new PokemonSprite { pokemonId = Pokemon.Id, name = Pokemon.Name, spriteUrl = GetSpriteUrl(Pokemon.Id) };
-        InsertPokemon(pokemon);
+        await InsertPokemon(pokemon);
       }
     }
     return pokemon;

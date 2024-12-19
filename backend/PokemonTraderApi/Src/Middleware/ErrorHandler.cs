@@ -30,6 +30,11 @@ public class ErrorHandler
       context.Response.StatusCode = StatusCodes.Status400BadRequest;
       await context.Response.WriteAsJsonAsync(new { Message = e.Message + ", is not a valid winner username" });
     }
+    catch (Market.Exceptions.ListingCreatorNotFound err)
+    {
+      context.Response.StatusCode = StatusCodes.Status500InternalServerError;
+      await context.Response.WriteAsJsonAsync(new { Message = "corruped listing. creator not found", id = err.listingId });
+    }
     catch (User.Exceptions.NotEnoughCoins)
     {
       context.Response.StatusCode = StatusCodes.Status400BadRequest;

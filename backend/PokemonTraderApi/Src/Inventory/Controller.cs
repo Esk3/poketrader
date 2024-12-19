@@ -34,6 +34,7 @@ public class InventoryController : MyControllerBase
   public async Task<ActionResult<List<string>>> GetInventoryView()
   {
     var user = await _userManager.GetUserAsync(User);
+    if (user is null) return Forbid("pokemon user not found");
     var items = _repo.GetItems(user);
     var Urls = items
       .Select(item => _linkGenerator.GetUriByAction(
@@ -50,6 +51,7 @@ public class InventoryController : MyControllerBase
   public async Task<ActionResult<List<string>>> GetAllItems()
   {
     var user = await _userManager.GetUserAsync(User);
+    if (user is null) return Forbid("pokemon user not found");
     var items = _repo.GetAllItems(user);
     var Urls = items
       .Select(item => _linkGenerator.GetUriByAction(
@@ -68,6 +70,7 @@ public class InventoryController : MyControllerBase
 
   {
     var item = _repo.GetPublicItem(itemId);
+    if (item is null) return NotFound("item not found");
     var pokemon = await _pokemonRepo.GetById(item.PokemonId);
     var url = _linkGenerator.GetUriByAction(HttpContext,
         nameof(Pokemon.Controller.PokemonController.GetByName),

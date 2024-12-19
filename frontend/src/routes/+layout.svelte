@@ -12,3 +12,9 @@
 <main>
   {@render children()}
 </main>
+
+<style>
+header {
+  width: 100%;
+}
+</style>

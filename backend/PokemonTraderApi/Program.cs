@@ -10,7 +10,7 @@ public class Program
     string allowAllOrigins = "_myAllowAll";
     var builder = WebApplication.CreateBuilder(args);
 
-    var connectionString = builder.Configuration.GetConnectionString("DefaultConnection");
+    var connectionString = builder.Configuration.GetConnectionString("DefaultConnection") ?? throw new Exception("connection string not found");
     builder.Services.AddTransient<AppDbContext>(e => new AppDbContext(connectionString));
 
     builder.Services.AddIdentityCore<IdentityUser>().AddSignInManager();

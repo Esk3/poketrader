@@ -2,11 +2,12 @@
   import PokemonPreView from "$lib/components/PokemonPreView.svelte";
 
   const { data } = $props();
+  console.log(data);
 </script>
 
 <div>
   <PokemonPreView pokemon={data.pokemon} />
-  <form method="post" action="/shop/{data.pokemonName}?/buy">
+  <form method="post" action="/shop/{data.pokemon.pokemonId}?/buy">
     <input type="hidden" name="pokemon-id" value={data.pokemon.pokemonId} />
     <input
       type="submit"

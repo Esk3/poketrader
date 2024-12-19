@@ -8,7 +8,6 @@ public interface IPokeApiClient
 
 public class PokeApiClient : IPokeApiClient
 {
-  private static readonly string urlBase = "https://pokeapi.co/api/v2";
   private static readonly string ApiBase = "api/v2";
   private static readonly string pokemonEndpoint = "pokemon";
   private static HttpClient sharedClient = new()

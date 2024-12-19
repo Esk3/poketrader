@@ -21,14 +21,13 @@
     flex-direction: column;
     list-style: none;
     padding: 0;
-    & a {
+    & li {
       border: 1px solid black;
+    }
+    & a {
       text-decoration: none;
       color: var(--text);
-      padding: 1em;
-      & * {
-        width: fit-content;
-      }
+      margin: 1em;
     }
   }
 </style>

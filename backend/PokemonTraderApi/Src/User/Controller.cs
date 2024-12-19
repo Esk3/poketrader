@@ -1,6 +1,7 @@
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.AspNetCore.Identity;
+using System.Diagnostics;
 
 namespace PokemonTraderApi.User.Controller;
 
@@ -21,6 +22,8 @@ public class UserController : Util.MyControllerBase
   public async Task<ActionResult<PublicPokemonUser>> GetUserInfo()
   {
     var user = await _userManager.GetUserAsync(User);
+    if (user is null) return Forbid("pokemon user not found");
+    Debug.Assert(user.UserName is not null, "user should always have a username");
 
     return new PublicPokemonUser { username = user.UserName, coins = user.coins };
   }
@@ -30,6 +33,7 @@ public class UserController : Util.MyControllerBase
   public async Task<ActionResult<long>> GetCoins()
   {
     var user = await _userManager.GetUserAsync(User);
+    if (user is null) return Forbid("pokemon user not found");
     return _repo.GetCoins(user.pokemonUserId);
   }
 
@@ -38,6 +42,7 @@ public class UserController : Util.MyControllerBase
   public async Task<ActionResult<long>> GetFreeCoins()
   {
     var user = await _userManager.GetUserAsync(User);
+    if (user is null) return Forbid("pokemon user not found");
     return _repo.UpdateCoins(300, user.pokemonUserId);
   }
 }

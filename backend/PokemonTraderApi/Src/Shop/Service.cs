@@ -1,5 +1,4 @@
 using PokemonTraderApi.Data;
-using Microsoft.Data.Sqlite;
 using Dapper;
 
 namespace PokemonTraderApi.Shop;
@@ -62,6 +61,7 @@ public class Repository : IRepository
   {
     // TODO: transaction
     var item = await GetItem(itemId);
+    if (item is null) throw new Exceptions.ItemNotFound(itemId);
     var coinsRemaining = _usersRepo.TryUpdateCoins(-item.cost, user.pokemonUserId);
     if (coinsRemaining == -1) return null;
 
@@ -118,8 +118,13 @@ public class Repository : IRepository
   {
     // TODO: transaction
     var inventoryItem = _inventoryRepo.GetItem(inventoryItemId, user);
+    if (inventoryItem is null) throw new Inventory.Exceptions.ItemNotFound(inventoryItemId);
+
     _inventoryRepo.DeleteItem(inventoryItemId, user);
+
     var item = await GetItem(inventoryItem.PokemonId);
+    if (item is null) throw new Exceptions.ItemNotFound(inventoryItemId);
+
     _usersRepo.UpdateCoins(item.cost, user.pokemonUserId);
     _transferRepo.RecordTransfer(user.pokemonUserId, null, item.cost, null);
     return null;

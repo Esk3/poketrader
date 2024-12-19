@@ -65,31 +65,24 @@ public class UserStore : IUserStore<IdentityUser>,
     throw new NotImplementedException();
   }
 
-  public async Task<string?> GetNormalizedUserNameAsync(IdentityUser user, CancellationToken cancellationToken)
+  public Task<string?> GetNormalizedUserNameAsync(IdentityUser user, CancellationToken cancellationToken)
   {
-    return user.UserName;
-    throw new NotImplementedException();
+    return Task.FromResult(user.UserName);
   }
 
-  public async Task<string> GetUserIdAsync(IdentityUser user, CancellationToken cancellationToken)
+  public Task<string> GetUserIdAsync(IdentityUser user, CancellationToken cancellationToken)
   {
-    return user.Id;
-    throw new NotImplementedException();
+    return Task.FromResult(user.Id);
   }
 
-  public async Task<string?> GetUserNameAsync(IdentityUser user, CancellationToken cancellationToken)
+  public Task<string?> GetUserNameAsync(IdentityUser user, CancellationToken cancellationToken)
   {
-    return user.UserName;
-    throw new NotImplementedException();
+    return Task.FromResult(user.UserName);
   }
 
-  public async Task SetNormalizedUserNameAsync(IdentityUser user, string? normalizedName, CancellationToken cancellationToken)
+  public Task SetNormalizedUserNameAsync(IdentityUser user, string? normalizedName, CancellationToken cancellationToken)
   {
-    /*var res = await _conn().ExecuteAsync(@"*/
-    /*    update auth_users set username = @UserName where auth_user_id = @Id*/
-    /*    ", new { Id = user.Id, UserName = user.UserName });*/
-    return;
-    throw new NotImplementedException();
+    return Task.CompletedTask;
   }
 
   public Task SetUserNameAsync(IdentityUser user, string? userName, CancellationToken cancellationToken)
@@ -127,9 +120,9 @@ public class UserStore : IUserStore<IdentityUser>,
     throw new NotImplementedException();
   }
 
-  public async Task<string?> GetPasswordHashAsync(IdentityUser user, CancellationToken cancellationToken)
+  public Task<string?> GetPasswordHashAsync(IdentityUser user, CancellationToken cancellationToken)
   {
-    throw new NotImplementedException();
+    throw new NotImplementedException("todo");
   }
 
   public Task<bool> HasPasswordAsync(IdentityUser user, CancellationToken cancellationToken)
