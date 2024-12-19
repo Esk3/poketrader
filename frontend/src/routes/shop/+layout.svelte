@@ -1,7 +1,7 @@
 <script>
   import PokemonCardLoading from "$lib/components/PokemonCardLoading.svelte";
   import FlipCard from "$lib/components/FlipCard.svelte";
-import PokemonPreView from "$lib/components/PokemonPreView.svelte";
+  import PokemonPreView from "$lib/components/PokemonPreView.svelte";
   const { children, data } = $props();
 </script>
 
@@ -14,7 +14,7 @@ import PokemonPreView from "$lib/components/PokemonPreView.svelte";
 {#await item.pokemon}
   <PokemonCardLoading/>
 {:then pokemon}
-  <FlipCard color="blue" width="130px" height="200px" delay={i*100}>
+  <FlipCard width="130px" height="200px" delay={i*100} loading={PokemonCardLoading}>
   <PokemonPreView {pokemon} >
     {item.cost} coins
   </PokemonPreView>

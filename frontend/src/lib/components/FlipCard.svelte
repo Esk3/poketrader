@@ -1,10 +1,12 @@
 <script lang="ts">
-const {color, width, height, delay, children}: any = $props();
+const {color, width, height, delay, children, loading}: any = $props();
 </script>
 
 <div class="flip-card" style="width: {width || "100%" }; height: {height || "100%"};">
   <div class="flip-card-inner" style="animation-delay: {delay || 0}ms;">
-    <div class="flip-card-front" style="background-color: {color}"> </div>
+     <div class="flip-card-front" style="background-color: {color}">
+      {@render loading?.()}
+     </div>
     <div class="flip-card-back" >
       {@render children?.()}
     </div>
@@ -27,7 +29,7 @@ const {color, width, height, delay, children}: any = $props();
   animation: flip 2s forwards;
 }
 
-.flip-card-front, .flip-card-back {
+:global(.flip-card-front), :global(.flip-card-front *), .flip-card-back {
   position: absolute;
   width: 100%;
   height: 100%;

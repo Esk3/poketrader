@@ -1,17 +1,17 @@
+import { fetchJson } from "$lib";
 import type { Actions, PageServerLoad } from "./$types";
 
 export const load: PageServerLoad = async ({ params, fetch }) => {
   const listingId = params.listingId;
 
-  const res = await fetch("/API/Market/" + listingId + "/bids");
-  let bids = await res.json();
+  const listing = await fetchJson("/API/Market/" + listingId, fetch);
+  const item = fetchJson(listing.itemUrl, fetch);
+  let bids = await fetchJson("/API/Market/" + listingId + "/bids", fetch);
   console.log(bids);
   bids = bids.map(bid => {
     return {
-      items: bid.itemUrls.map(async url => {
-        const res = await fetch(url);
-        return await res.json();
-      }), ...bid
+      items: bid.itemUrls.map(async url => await fetchJson(url, fetch)),
+      ...bid
     }
   });
 
@@ -23,6 +23,8 @@ export const load: PageServerLoad = async ({ params, fetch }) => {
   });
 
   return {
+    listing,
+    item,
     listingId,
     bids,
     inventory

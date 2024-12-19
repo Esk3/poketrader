@@ -9,6 +9,5 @@ export const load: PageServerLoad = async ({ fetch, url }) => {
     const item = await res.json();
     return item;
   });
-  console.log(inventory);
   return { inventory };
 }

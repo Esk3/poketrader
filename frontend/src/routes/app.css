@@ -1,0 +1,9 @@
+:root {
+  --main: red;
+  --second: blue;
+  --text: black;
+}
+
+body {
+  margin: 0;
+}
