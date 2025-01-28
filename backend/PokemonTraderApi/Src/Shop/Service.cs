@@ -7,6 +7,7 @@ public interface IRepository
 {
   public void Setup();
   public bool Test();
+
   public List<ShopItem> GetItems();
   public List<ShopPokemon> GetPokemon();
   public Task<ShopPokemon?> GetPokemonById(long pokemonId);

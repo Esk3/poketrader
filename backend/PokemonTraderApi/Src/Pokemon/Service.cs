@@ -22,7 +22,7 @@ public class Repository : IRepository
     _pokeApiClient = pokeApiClient;
   }
 
-  public void Setup()
+  public async void Setup()
   {
     _context.GetConnection().Execute(
         @"create table if not exists pokemon (
@@ -31,6 +31,13 @@ public class Repository : IRepository
           sprite_url text
           )"
         );
+    if (GetNames().Count == 0)
+    {
+      for (int i = 0; i < 20; i++)
+      {
+        await InsertPokemon(new PokemonSprite { pokemonId = i });
+      }
+    }
   }
 
   public bool Test()
