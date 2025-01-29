@@ -5,7 +5,7 @@ namespace PokemonTraderApi.Shop;
 
 public interface IRepository
 {
-  public void Setup();
+  public Task Setup();
   public bool Test();
 
   public List<ShopItem> GetItems();
@@ -42,7 +42,7 @@ public class Repository : IRepository
     _transferRepo = transferRepository;
   }
 
-  public void Setup()
+  public async Task Setup()
   {
     _context.GetConnection().Execute(
         @"create table if not exists shop_items (
@@ -51,6 +51,13 @@ public class Repository : IRepository
           foreign key (pokemon_id) references pokemon(pokemon_id)
           )"
         );
+    if (GetItems().Count == 0)
+    {
+      for (int i = 1; i < 21; i++)
+      {
+        await Insert(i);
+      }
+    }
   }
 
   public bool Test()

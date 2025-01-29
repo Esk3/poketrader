@@ -5,7 +5,7 @@ namespace PokemonTraderApi;
 
 public class Program
 {
-  public static void Main(string[] args)
+  public static async Task Main(string[] args)
   {
     string allowAllOrigins = "_myAllowAll";
     var builder = WebApplication.CreateBuilder(args);
@@ -61,7 +61,7 @@ public class Program
     app.UseMiddleware<Middleware.ErrorHandler>();
 
     ((Data.UserStore)app.Services.GetRequiredService<IUserStore<IdentityUser>>()).Setup();
-    app.SetupRespositoriesServices();
+    await app.SetupRespositoriesServices();
 
     // Configure the HTTP request pipeline.
     if (app.Environment.IsDevelopment())

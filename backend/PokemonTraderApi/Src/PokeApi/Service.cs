@@ -18,7 +18,6 @@ public class PokeApiClient : IPokeApiClient
   public async Task<Pokemon?> GetById(long pokemonId)
   {
     var res = await sharedClient.GetAsync(ApiBase + "/" + pokemonEndpoint + "/" + pokemonId);
-    /*var text = await res.Content.ReadAsStringAsync();*/
     var pokemon = await res.Content.ReadFromJsonAsync<Pokemon>();
     return pokemon;
   }

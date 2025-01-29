@@ -38,7 +38,7 @@ namespace Microsoft.Extensions.DependencyInjection
       return app;
     }
 
-    public static IApplicationBuilder SetupRespositoriesServices(this IApplicationBuilder app)
+    public static async Task<IApplicationBuilder> SetupRespositoriesServices(this IApplicationBuilder app)
     {
       using (var serviceScope = app.ApplicationServices.CreateScope())
       {
@@ -48,7 +48,7 @@ namespace Microsoft.Extensions.DependencyInjection
         services.GetRequiredService<PokemonTraderApi.Profile.IRepository>().Setup();
         services.GetRequiredService<PokemonTraderApi.Pokemon.IRepository>().Setup();
         services.GetRequiredService<PokemonTraderApi.TransferRecord.IRepository>().Setup();
-        services.GetRequiredService<PokemonTraderApi.Shop.IRepository>().Setup();
+        await services.GetRequiredService<PokemonTraderApi.Shop.IRepository>().Setup();
         services.GetRequiredService<PokemonTraderApi.Market.IRepository>().Setup();
         services.GetRequiredService<PokemonTraderApi.Inventory.IRepository>().Setup();
         services.GetRequiredService<PokemonTraderApi.Trades.IRepository>().Setup();
